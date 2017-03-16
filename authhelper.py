@@ -2,11 +2,11 @@ from urllib.parse import quote, urlencode
 import json
 import time
 import requests
-import lfp_password
+from lfp import lfp_password
 
 # Client ID and secret
-client_id = LFP_CLIENT_ID
-client_secret = LFP_CLIENT_SECRET
+client_id = lfp_password.LFP_CLIENT_ID
+client_secret = lfp_password.LFP_CLIENT_SECRET
 
 authority = 'https://login.microsoftonline.com'
 
