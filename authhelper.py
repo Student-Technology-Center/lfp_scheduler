@@ -2,7 +2,7 @@ from urllib.parse import quote, urlencode
 import json
 import time
 import requests
-from lfp import lfp_password
+import lfp_password
 
 # Client ID and secret
 client_id = lfp_password.LFP_CLIENT_ID
