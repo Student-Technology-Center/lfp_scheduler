@@ -57,8 +57,8 @@ def getTokenFromRefresh(refreshToken, redirectUri):
 		'refresh_token': refreshToken,
 		'redirect_uri': redirectUri,
 		'scope': ' '.join(str(i) for i in scopes),
-		'client_id': clientId,
-		'client_secret': clientSecret,
+		'client_id': client_id,
+		'client_secret': client_secret,
 	}
 
 	result = requests.post(token_url, data = postData)
@@ -73,17 +73,23 @@ def getTokenFromRefresh(refreshToken, redirectUri):
 def populateWithToken(user, token):
 	user.userdata.accessToken = token['access_token']
 	delta = token['expires_in']
-	user.userdata.accessExpireTime = datetime.now() + timedelta(seconds=delta)
+	# Add extra 5 minute refresh buffer
+	user.userdata.accessExpireTime = timezone.now() + timedelta(seconds=delta - 300)
 	user.userdata.refreshToken = token['refresh_token']
 	user.save()
 
 # If function succeeds, return None, else return redirect uri
 def authorize(request):
+	print('authorizing...')
 	data = request.user.userdata
-	if data.accessToken != None and data.accessExpireTime != None and data.accessExpireTime <= timezone.now():
+	if data.accessToken != None and data.accessExpireTime != None and timezone.now() < data.accessExpireTime:
 		# TODO: make a test API call
+		print('expire time: '+str(data.accessExpireTime)+' current time: '+str(timezone.now()))
+		print(data.accessExpireTime <= timezone.now())
+		print(data.accessExpireTime > timezone.now())
 		return None
 	elif data.refreshToken != None:
+		print("Refreshing access for user "+request.user.username+" with refresh token!")
 		token = getTokenFromRefresh(data.refreshToken, request.build_absolute_uri(reverse('gettoken')))
 		if (token == None): # Refresh code might be expired
 			data.accessToken = None

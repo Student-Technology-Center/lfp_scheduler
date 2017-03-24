@@ -14,7 +14,7 @@ def home(request):
 	if authResult != None:
 		return HttpResponseRedirect(authResult)
 	#TODO: render scheduler form here
-	return HttpResponse(request.user.username + " " + request.user.userdata.accessToken)
+	return HttpResponse(request.user.username + " " + request.user.userdata.accessToken + '\n' + str(request.user.userdata.accessExpireTime))
 
 	#redirectUri = request.build_absolute_uri(reverse('gettoken'))
 	#signInUrl = authhelper.getSigninUrl(redirectUri)
