@@ -10,8 +10,11 @@ import time
 @login_required
 def home(request):
 	#TODO: check if access token exists
+	authResult = authhelper.authorize(request)
+	if authResult != None:
+		return HttpResponseRedirect(authResult)
 	#TODO: render scheduler form here
-	return HttpResponse(request.user.username)
+	return HttpResponse(request.user.username + " " + request.user.userdata.accessToken)
 
 	#redirectUri = request.build_absolute_uri(reverse('gettoken'))
 	#signInUrl = authhelper.getSigninUrl(redirectUri)
@@ -22,12 +25,8 @@ def gettoken(request):
 	authCode = request.GET['code']
 	redirectUri = request.build_absolute_uri(reverse('gettoken'))
 	token = authhelper.getTokenFromCode(authCode, redirectUri)
-	accessToken = token['access_token']
-	expireTime = int(time.time()) + token['expires_in'] - 300 # 5 minute buffer
-
-	request.session['authenticated'] = True
-	request.session['accessToken'] = accessToken
-	request.session['refreshToken'] = token['refresh_token']
-	request.session['expireTime'] = expireTime
+	if token == None:
+		print("ERROR: Failed to get token from auth code!")
+	authhelper.populateWithToken(request.user, token)
 	return HttpResponseRedirect(reverse('home'))
 

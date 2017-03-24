@@ -1,10 +1,13 @@
+from django.urls import reverse
+from django.utils import timezone
 from urllib.parse import quote, urlencode
 import json
 import time
+from datetime import datetime, timedelta
 import requests
 import lfp_password
 
-# Client ID and secret
+# Client ID and secret - from lfp_password.py
 client_id = lfp_password.LFP_CLIENT_ID
 client_secret = lfp_password.LFP_CLIENT_SECRET
 
@@ -18,9 +21,7 @@ token_url = '{0}{1}'.format(authority, '/common/oauth2/v2.0/token')
 # The scopes required by the app
 scopes = ['openid',
 		'offline_access',
-		'https://outlook.office.com/mail.read',
 		'https://outlook.office.com/calendars.readwrite.shared',
-		'https://outlook.office.com/mail.send',
 		]
 
 def getSigninUrl(redirectUri):
@@ -42,12 +43,14 @@ def getTokenFromCode(authCode, redirectUri):
 		'client_id': client_id,
 		'client_secret': client_secret
 		}
-	r = requests.post(token_url, data = postData)
+	result = requests.post(token_url, data = postData)
 
+	if result.status_code != requests.codes.ok:
+		return None
 	try:
-		return r.json()
+		return result.json()
 	except:
-		return 'Error retrieving token: {0} - {1}'.format(r.status_code, r.text)
+		return None
 
 def getTokenFromRefresh(refreshToken, redirectUri):
 	postData = { 'grant_type': 'refresh_token',
@@ -60,24 +63,39 @@ def getTokenFromRefresh(refreshToken, redirectUri):
 
 	result = requests.post(token_url, data = postData)
 
+	if (result.status_code != requests.codes.ok):
+		return None
 	try:
-		return result.json();
+		return result.json()
 	except:
-		return 'Error retrieving token from refresh: {0} - {1}'.format(result.status_code, result.text)
+		return None
 
-def getAccessToken(request, redirectUri):
-	currentToken = request.session['access_token']
-	expireTime = request.session['expire_time']
-	currentTime = int(time.time())
-	if (currentToken and currentTime < expireTime):
-		return currentToken
+def populateWithToken(user, token):
+	user.userdata.accessToken = token['access_token']
+	delta = token['expires_in']
+	user.userdata.accessExpireTime = datetime.now() + timedelta(seconds=delta)
+	user.userdata.refreshToken = token['refresh_token']
+	user.save()
+
+# If function succeeds, return None, else return redirect uri
+def authorize(request):
+	data = request.user.userdata
+	if data.accessToken != None and data.accessExpireTime != None and data.accessExpireTime <= timezone.now():
+		# TODO: make a test API call
+		return None
+	elif data.refreshToken != None:
+		token = getTokenFromRefresh(data.refreshToken, request.build_absolute_uri(reverse('gettoken')))
+		if (token == None): # Refresh code might be expired
+			data.accessToken = None
+			data.accessExpireTime = None
+			data.refreshToken = None
+			request.user.save()
+			return request.build_absolute_uri(reverse('home'))
+		else:
+			populateWithToken(request.user, token)
+			return None
 	else:
-		refreshToken = request.session['refresh_token']
-		newTokens = getTokenFromRefresh(refreshToken, redirectUri)
-
-		request.session['access_token'] = newTokens['access_token']
-		request.session['refresh_token'] = newTokens['refresh_token']
-		request.session['expire_time'] = int(time.time()) + newTokens['expires_in'] - 300
-		
-		return newToken['access_token']
+		# Go through the auth process from the beginning
+		redirectUri = request.build_absolute_uri(reverse('gettoken'))
+		return getSigninUrl(redirectUri)
 

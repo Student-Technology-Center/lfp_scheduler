@@ -5,9 +5,9 @@ from django.dispatch import receiver
 
 class UserData(models.Model):
 	user = models.OneToOneField(User, on_delete=models.CASCADE)
-	authToken = models.TextField(null=True)
+	accessToken = models.TextField(null=True)
 	refreshToken = models.TextField(null=True)
-	authExpireTime = models.DateTimeField(null=True)
+	accessExpireTime = models.DateTimeField(null=True)
 
 @receiver(post_save, sender=User)
 def saveUserData(sender, instance, created, **kwargs):
