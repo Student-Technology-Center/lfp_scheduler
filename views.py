@@ -4,17 +4,37 @@ from django.urls import reverse
 from django.contrib.auth.decorators import login_required
 
 from lfp import authhelper
+from lfp import outlook
 
 import time
+import json
 
 @login_required
 def home(request):
-	#TODO: check if access token exists
+	user = request.user
+	userdata = request.user.userdata
 	authResult = authhelper.authorize(request)
 	if authResult != None:
 		return HttpResponseRedirect(authResult)
-	#TODO: render scheduler form here
-	return HttpResponse(request.user.username + " " + request.user.userdata.accessToken + '\n' + str(request.user.userdata.accessExpireTime))
+
+	outlookMe = outlook.getMe(userdata.accessToken)
+	if outlookMe['EmailAddress'] != user.email:
+		print("Emails don't match! Replacing...")
+		user.email = outlookMe['EmailAddress']
+		user.save()
+	
+	calendars = outlook.getCalendars(userdata.accessToken, user.email)
+
+	# Find the proper calendar ID
+	calendarId = ''
+	for item in calendars['value']:
+		if (item['Name'] == 'test-calendar'):
+			calendarId = item['Id']
+	
+	calendarView = outlook.getCalendarView(userdata.accessToken, user.email, calendarId)
+
+	return HttpResponse(json.dumps(calendarView))
+	#return HttpResponse(outlookMe['DisplayName']+'\n'+user.username + " " +userdata.accessToken+'\n'+str(userdata.accessExpireTime))
 
 	#redirectUri = request.build_absolute_uri(reverse('gettoken'))
 	#signInUrl = authhelper.getSigninUrl(redirectUri)
@@ -28,5 +48,6 @@ def gettoken(request):
 	if token == None:
 		print("ERROR: Failed to get token from auth code!")
 	authhelper.populateWithToken(request.user, token)
+
 	return HttpResponseRedirect(reverse('home'))
 
