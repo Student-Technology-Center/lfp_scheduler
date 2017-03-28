@@ -26,12 +26,15 @@ def home(request):
 	calendars = outlook.getCalendars(userdata.accessToken, user.email)
 
 	# Find the proper calendar ID
+	# TODO: Cache this for performance
 	calendarId = ''
 	for item in calendars['value']:
 		if (item['Name'] == 'test-calendar'):
 			calendarId = item['Id']
 	
 	calendarView = outlook.getCalendarView(userdata.accessToken, user.email, calendarId)
+
+	#for item in calendarView['value']:
 
 	return HttpResponse(json.dumps(calendarView))
 	#return HttpResponse(outlookMe['DisplayName']+'\n'+user.username + " " +userdata.accessToken+'\n'+str(userdata.accessExpireTime))

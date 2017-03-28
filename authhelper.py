@@ -85,8 +85,6 @@ def authorize(request):
 	if data.accessToken != None and data.accessExpireTime != None and timezone.now() < data.accessExpireTime:
 		# TODO: make a test API call
 		print('expire time: '+str(data.accessExpireTime)+' current time: '+str(timezone.now()))
-		print(data.accessExpireTime <= timezone.now())
-		print(data.accessExpireTime > timezone.now())
 		return None
 	elif data.refreshToken != None:
 		print("Refreshing access for user "+request.user.username+" with refresh token!")

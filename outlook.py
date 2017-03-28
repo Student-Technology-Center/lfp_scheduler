@@ -1,12 +1,13 @@
 import requests
 import uuid
 import json
+from datetime import datetime, date, time, timedelta
 
 outlookApiEndpoint = 'https://outlook.office.com/api/v2.0{0}'
 
 # Generic API call
-def makeApiCall(method, url, token, userEmail, payload=None, params=None):
-	headers = {
+def makeApiCall(method, url, token, userEmail, payload=None, params=None, headers=None):
+	hdrs= {
 		'X-AnchorMailbox':userEmail,
 		'User-Agent':'LFP Scheduler/1.0',
 		'Authorization':'Bearer {0}'.format(token),
@@ -19,20 +20,22 @@ def makeApiCall(method, url, token, userEmail, payload=None, params=None):
 		'return-client-request-id':'true',
 	}
 
-	headers.update(instrumentation)
+	hdrs.update(instrumentation)
+	if headers != None:
+		hdrs.update(headers)
 
 	response = None
 
 	if (method.upper() == 'GET'):
-		response = requests.get(url, headers=headers, params=params)
+		response = requests.get(url, headers=hdrs, params=params)
 	elif (method.upper() == 'DELETE'):
-		response = requests.delete(url, headers=headers, params=params)
+		response = requests.delete(url, headers=hdrs, params=params)
 	elif (method.upper() == 'PATCH'):
 		headers.update({'Content-Type':'application/json'})
-		response = requests.patch(url, headers=headers, data=json.dumps(payload), params=params)
+		response = requests.patch(url, headers=hdrs, data=json.dumps(payload), params=params)
 	elif (method.upper() == 'POST'):
 		headers.update({'Content-Type':'application/json'})
-		response = requests.post(url, headers=headers, data=json.dumps(payload), params=params)
+		response = requests.post(url, headers=hdrs, data=json.dumps(payload), params=params)
 	
 	return response
 
@@ -58,11 +61,16 @@ def getCalendars(token, email):
 
 def getCalendarView(token, email, calendarId):
 	url = outlookApiEndpoint.format('/me/calendars/'+calendarId+'/calendarview')
-	print('url: ' + url)
-	
-	# TODO: pass date range parameter
 
-	res = makeApiCall('GET', url, token, email)
+	dayStart = datetime.combine(date.today(), time())
+
+	dayEnd = dayStart + timedelta(hours=24)
+
+	params = {'startDateTime':dayStart.isoformat(),
+		'endDateTime':dayEnd.isoformat()}
+
+	res = makeApiCall('GET', url, token, email, params=params, headers={'Prefer':'outlook.timezone="America/Los_Angeles"'})
+	#res = makeApiCall('GET', url, token, email, params=params)
 
 	if (res.status_code == requests.codes.ok):
 		return res.json()
