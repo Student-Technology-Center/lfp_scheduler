@@ -11,12 +11,17 @@ import json
 
 @login_required
 def home(request):
+	if (request.method == 'POST'):
+		print('received post')
+		#TODO: Sanitize and submit form input here
+	
 	user = request.user
 	userdata = request.user.userdata
 	authResult = authhelper.authorize(request)
 	if authResult != None:
 		return HttpResponseRedirect(authResult)
 
+	#TODO: This should DEFINITELY not be done every reload... do only after full auth refresh?
 	outlookMe = outlook.getMe(userdata.accessToken)
 	if outlookMe['EmailAddress'] != user.email:
 		print("Emails don't match! Replacing...")
@@ -36,12 +41,7 @@ def home(request):
 
 	#for item in calendarView['value']:
 
-	return HttpResponse(json.dumps(calendarView))
-	#return HttpResponse(outlookMe['DisplayName']+'\n'+user.username + " " +userdata.accessToken+'\n'+str(userdata.accessExpireTime))
-
-	#redirectUri = request.build_absolute_uri(reverse('gettoken'))
-	#signInUrl = authhelper.getSigninUrl(redirectUri)
-	#return HttpResponseRedirect(signInUrl)
+	return render(request, 'lfp/form.html')
 
 @login_required
 def gettoken(request):
