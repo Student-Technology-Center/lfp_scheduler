@@ -8,6 +8,7 @@ class UserData(models.Model):
 	accessToken = models.TextField(null=True)
 	refreshToken = models.TextField(null=True)
 	accessExpireTime = models.DateTimeField(null=True)
+	calendarId = models.TextField(null=True)
 
 @receiver(post_save, sender=User)
 def saveUserData(sender, instance, created, **kwargs):

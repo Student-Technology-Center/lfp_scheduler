@@ -7,40 +7,38 @@ from lfp import authhelper
 from lfp import outlook
 
 import time
+import datetime
 import json
 
 @login_required
 def home(request):
-	if (request.method == 'POST'):
-		print('received post')
-		#TODO: Sanitize and submit form input here
-	
 	user = request.user
 	userdata = request.user.userdata
-	authResult = authhelper.authorize(request)
-	if authResult != None:
-		return HttpResponseRedirect(authResult)
 
-	#TODO: This should DEFINITELY not be done every reload... do only after full auth refresh?
-	outlookMe = outlook.getMe(userdata.accessToken)
-	if outlookMe['EmailAddress'] != user.email:
-		print("Emails don't match! Replacing...")
-		user.email = outlookMe['EmailAddress']
-		user.save()
-	
-	calendars = outlook.getCalendars(userdata.accessToken, user.email)
+	if (request.method == 'POST'):
+		startTime = datetime.datetime.strptime(request.POST['begin_time'], '%Y-%m-%d %H:%M')
+		outlook.createAppointment(userdata, request.POST['name'], startTime)
+		
+	else: # Assume request was GET
+		authResult = authhelper.authorize(request)
+		if authResult != None:
+			return HttpResponseRedirect(authResult)
+		#TODO: This should DEFINITELY not be done every reload... do only after full auth refresh?
+		outlookMe = outlook.getMe(userdata.accessToken)
+		if outlookMe['EmailAddress'] != user.email:
+			print("Emails don't match! Replacing...")
+			user.email = outlookMe['EmailAddress']
+			user.save()
+
+	calendars = outlook.getCalendars(userdata)
 
 	# Find the proper calendar ID
 	# TODO: Cache this for performance
-	calendarId = ''
 	for item in calendars['value']:
 		if (item['Name'] == 'test-calendar'):
-			calendarId = item['Id']
+			userdata.calendarId = item['Id']
+			user.save()
 	
-	calendarView = outlook.getCalendarView(userdata.accessToken, user.email, calendarId)
-
-	#for item in calendarView['value']:
-
 	return render(request, 'lfp/form.html')
 
 @login_required

@@ -6,7 +6,7 @@ from datetime import datetime, date, time, timedelta
 outlookApiEndpoint = 'https://outlook.office.com/api/v2.0{0}'
 
 # Generic API call
-def makeApiCall(method, url, token, userEmail, payload=None, params=None, headers=None):
+def makeApiCall(method, url, token, userEmail, payload=None, params=None, headers=None, expected=requests.codes.ok):
 	hdrs= {
 		'X-AnchorMailbox':userEmail,
 		'User-Agent':'LFP Scheduler/1.0',
@@ -31,36 +31,30 @@ def makeApiCall(method, url, token, userEmail, payload=None, params=None, header
 	elif (method.upper() == 'DELETE'):
 		response = requests.delete(url, headers=hdrs, params=params)
 	elif (method.upper() == 'PATCH'):
-		headers.update({'Content-Type':'application/json'})
+		hdrs.update({'Content-Type':'application/json'})
 		response = requests.patch(url, headers=hdrs, data=json.dumps(payload), params=params)
 	elif (method.upper() == 'POST'):
-		headers.update({'Content-Type':'application/json'})
+		hdrs.update({'Content-Type':'application/json'})
 		response = requests.post(url, headers=hdrs, data=json.dumps(payload), params=params)
 	
-	return response
+	if (response.status_code == expected):
+		return response.json()
+	else:
+		return None
 
 def getMe(token):
 	getMeUrl = outlookApiEndpoint.format('/me')
 
 	queryParams = {'$select':'DisplayName,EmailAddress'}
 
-	res = makeApiCall('GET', getMeUrl, token, '', params=queryParams)
-	if (res.status_code == requests.codes.ok):
-		return res.json()
-	else:
-		return None
+	return makeApiCall('GET', getMeUrl, token, '', params=queryParams)
 
-def getCalendars(token, email):
+def getCalendars(data):
 	url = outlookApiEndpoint.format('/me/calendars')
-	res = makeApiCall('GET', url, token, email)
+	return makeApiCall('GET', url, data.accessToken, data.user.email)
 
-	if (res.status_code == requests.codes.ok):
-		return res.json()
-	else:
-		return None
-
-def getCalendarView(token, email, calendarId):
-	url = outlookApiEndpoint.format('/me/calendars/'+calendarId+'/calendarview')
+def getCalendarView(data):
+	url = outlookApiEndpoint.format('/me/calendars/'+data.calendarId+'/calendarview')
 
 	dayStart = datetime.combine(date.today(), time())
 
@@ -69,12 +63,27 @@ def getCalendarView(token, email, calendarId):
 	params = {'startDateTime':dayStart.isoformat(),
 		'endDateTime':dayEnd.isoformat()}
 
-	res = makeApiCall('GET', url, token, email, params=params, headers={'Prefer':'outlook.timezone="America/Los_Angeles"'})
+	return makeApiCall('GET', url, data.accessToken, data.user.email, params=params, headers={'Prefer':'outlook.timezone="America/Los_Angeles"'})
 	#res = makeApiCall('GET', url, token, email, params=params)
 
-	if (res.status_code == requests.codes.ok):
-		return res.json()
-	else:
-		print("Error! statuscode: " + str(res.status_code))
-		return None
+def createAppointment(data, name, startTime):
+	url = outlookApiEndpoint.format('/me/calendars/'+data.calendarId+'/events')
+	
+	endTime = startTime + timedelta(hours=1)
+
+	body = {
+		'Subject':'LFP w/ '+name,
+		'Body': {
+			'ContentType':'HTML',
+			'Content':'This confirms your appointment', },
+		'Start': {
+			'DateTime':startTime.isoformat(),
+			#TODO: convert to UTC prior
+			'TimeZone':'Pacific Standard Time', },
+		'End': {
+			'DateTime':endTime.isoformat(),
+			'TimeZone':'Pacific Standard Time', },
+	}
+
+	return makeApiCall('POST', url, data.accessToken, data.user.email, payload=body, expected=requests.codes.created)
 
