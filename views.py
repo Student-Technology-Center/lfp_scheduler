@@ -15,6 +15,10 @@ def home(request):
 	user = request.user
 	userdata = request.user.userdata
 
+	authResult = authhelper.authorize(request)
+	if authResult != None:
+		return HttpResponseRedirect(authResult)
+
 	if (request.method == 'POST'):
 		startTime = datetime.datetime.strptime(request.POST['begin_time'], '%Y-%m-%d %H:%M')
 		outlook.createAppointment(
@@ -29,9 +33,6 @@ def home(request):
 			request.POST['priority'],
 			request.POST['created_by'])
 	else: # Assume request was GET
-		authResult = authhelper.authorize(request)
-		if authResult != None:
-			return HttpResponseRedirect(authResult)
 		#TODO: This should DEFINITELY not be done every reload... do only after full auth refresh?
 		outlookMe = outlook.getMe(userdata.accessToken)
 		if outlookMe['EmailAddress'] != user.email:
