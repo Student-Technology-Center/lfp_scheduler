@@ -5,6 +5,7 @@ from datetime import datetime, date, time, timedelta
 
 outlookApiEndpoint = 'https://outlook.office.com/api/v2.0{0}'
 
+
 # Generic API call
 def makeApiCall(method, url, token, userEmail, payload=None, params=None, headers=None, expected=requests.codes.ok):
 	hdrs= {
@@ -40,6 +41,8 @@ def makeApiCall(method, url, token, userEmail, payload=None, params=None, header
 	if (response.status_code == expected):
 		return response.json()
 	else:
+		print("api call failed with code: " + str(response.status_code))
+		print("\ndump:\n"+response.text+"\n")
 		return None
 
 def getMe(token):
@@ -66,16 +69,36 @@ def getCalendarView(data):
 	return makeApiCall('GET', url, data.accessToken, data.user.email, params=params, headers={'Prefer':'outlook.timezone="America/Los_Angeles"'})
 	#res = makeApiCall('GET', url, token, email, params=params)
 
-def createAppointment(data, name, startTime):
+BODY_STR = ("<br>This confirms your appointment on {0} at {1} at the "+
+"Student Technology Center. If you are unable to keep this appointment, "+
+"please reply to let us know or call 360-650-4300. The largest you can "+
+"print is 30x40 inches. Please bring it in PDF or PowerPoint format on "+
+"a flash drive.<br><br>Thanks!<br>"+
+"________________________________<br><br>"+
+"Client Name: {2}<br>Professor/Instructor: {3}<br>"+
+"Class: {4}<br>WWU e-mail: {5}<br>"+
+"W#: {6}<br>Contact Phone: {7}<br>"+
+"Priority: {8}<br>Appointment made by: {9}<br>")
+
+def createAppointment(data, startTime, name, prof, classCode, email, wNum, phone, priority, creator):
 	url = outlookApiEndpoint.format('/me/calendars/'+data.calendarId+'/events')
 	
 	endTime = startTime + timedelta(hours=1)
 
 	body = {
-		'Subject':'LFP w/ '+name,
+		'Subject':'LFP w/ '+name.split()[0],
 		'Body': {
 			'ContentType':'HTML',
-			'Content':'This confirms your appointment', },
+			'Content':BODY_STR.format(str(startTime.month)+'/'+str(startTime.day),
+				startTime.strftime('%I:%M %p'),
+				name,
+				prof,
+				classCode,
+				email,
+				wNum,
+				phone,
+				priority,
+				creator)},
 		'Start': {
 			'DateTime':startTime.isoformat(),
 			#TODO: convert to UTC prior
@@ -83,6 +106,13 @@ def createAppointment(data, name, startTime):
 		'End': {
 			'DateTime':endTime.isoformat(),
 			'TimeZone':'Pacific Standard Time', },
+		'Attendees': [{
+			'EmailAddress': {
+				'Address':email,
+				'Name':name
+			},
+			'Type':'Optional'
+		}]
 	}
 
 	return makeApiCall('POST', url, data.accessToken, data.user.email, payload=body, expected=requests.codes.created)

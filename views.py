@@ -17,8 +17,17 @@ def home(request):
 
 	if (request.method == 'POST'):
 		startTime = datetime.datetime.strptime(request.POST['begin_time'], '%Y-%m-%d %H:%M')
-		outlook.createAppointment(userdata, request.POST['name'], startTime)
-		
+		outlook.createAppointment(
+			userdata,
+			startTime,
+			request.POST['client_name'],
+			request.POST['client_prof'],
+			request.POST['client_class'],
+			request.POST['client_email'],
+			request.POST['client_w_num'],
+			request.POST['client_phone_num'],
+			request.POST['priority'],
+			request.POST['created_by'])
 	else: # Assume request was GET
 		authResult = authhelper.authorize(request)
 		if authResult != None:

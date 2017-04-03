@@ -82,7 +82,7 @@ def populateWithToken(user, token):
 def authorize(request):
 	print('authorizing...')
 	data = request.user.userdata
-	if data.accessToken != None and data.accessExpireTime != None and timezone.now() < data.accessExpireTime:
+	if data.accessToken != None and data.accessExpireTime != None and datetime.now(timezone.utc) < data.accessExpireTime:
 		# TODO: make a test API call
 		print('expire time: '+str(data.accessExpireTime)+' current time: '+str(timezone.now()))
 		return None
@@ -100,6 +100,7 @@ def authorize(request):
 			return None
 	else:
 		# Go through the auth process from the beginning
+		print("Refresh token doesnt' exist! Going through auth process...")
 		redirectUri = request.build_absolute_uri(reverse('gettoken'))
 		return getSigninUrl(redirectUri)
 
