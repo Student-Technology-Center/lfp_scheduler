@@ -34,6 +34,7 @@ def home(request):
 			request.POST['created_by'])
 	else: # Assume request was GET
 		#TODO: This should DEFINITELY not be done every reload... do only after full auth refresh?
+		#TODO: Check for return before dereferencing None
 		outlookMe = outlook.getMe(userdata.accessToken)
 		if outlookMe['EmailAddress'] != user.email:
 			print("Emails don't match! Replacing...")
@@ -45,7 +46,9 @@ def home(request):
 	# Find the proper calendar ID
 	# TODO: Cache this for performance
 	for item in calendars['value']:
-		if (item['Name'] == 'test-calendar'):
+		print(item['Name'])
+		if (item['Name'] == 'Large Format Printer'):
+			print('id: ' + item['Id'])
 			userdata.calendarId = item['Id']
 			user.save()
 	

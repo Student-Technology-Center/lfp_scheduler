@@ -4,6 +4,7 @@ import json
 from datetime import datetime, date, time, timedelta
 
 outlookApiEndpoint = 'https://outlook.office.com/api/v2.0{0}'
+stcUser = '/users/StudentTechnology.Center@wwu.edu'
 
 
 # Generic API call
@@ -53,11 +54,11 @@ def getMe(token):
 	return makeApiCall('GET', getMeUrl, token, '', params=queryParams)
 
 def getCalendars(data):
-	url = outlookApiEndpoint.format('/me/calendars')
+	url = outlookApiEndpoint.format(stcUser + '/calendars')
 	return makeApiCall('GET', url, data.accessToken, data.user.email)
 
 def getCalendarView(data):
-	url = outlookApiEndpoint.format('/me/calendars/'+data.calendarId+'/calendarview')
+	url = outlookApiEndpoint.format(stcUser + '/'+data.calendarId+'/calendarview')
 
 	dayStart = datetime.combine(date.today(), time())
 
@@ -81,7 +82,7 @@ BODY_STR = ("<br>This confirms your appointment on {0} at {1} at the "+
 "Priority: {8}<br>Appointment made by: {9}<br>")
 
 def createAppointment(data, startTime, name, prof, classCode, email, wNum, phone, priority, creator):
-	url = outlookApiEndpoint.format('/me/calendars/'+data.calendarId+'/events')
+	url = outlookApiEndpoint.format(stcUser + '/calendars/' + data.calendarId+'/events')
 	
 	endTime = startTime + timedelta(hours=1)
 
