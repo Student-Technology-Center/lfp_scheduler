@@ -3,15 +3,15 @@ from django.http import HttpResponse, HttpResponseRedirect
 from django.urls import reverse
 from django.contrib.auth.decorators import login_required
 
-from lfp import authhelper
-from lfp import outlook
+from lfp_scheduler import authhelper
+from lfp_scheduler import outlook
 
 import time
 import datetime
 import json
 
 @login_required
-def home(request):
+def lfp(request):
 	user = request.user
 	userdata = request.user.userdata
 
@@ -68,5 +68,3 @@ def gettoken(request):
 def workshops(request):
 	print("workshops.")
 	return render(request, 'lfp/workshops.html')
-
-
