@@ -1,4 +1,4 @@
-from django.conf.urls import urls
+from django.conf.urls import url
 
 from lfp_scheduler import views as lfp_views
 
