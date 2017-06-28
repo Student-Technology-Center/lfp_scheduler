@@ -64,7 +64,3 @@ def gettoken(request):
 	authhelper.populateWithToken(request.user, token)
 
 	return HttpResponseRedirect(reverse('home'))
-
-def workshops(request):
-	print("workshops.")
-	return render(request, 'lfp/workshops.html')
