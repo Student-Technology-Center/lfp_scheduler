@@ -2,4 +2,4 @@ from django.apps import AppConfig
 
 
 class LfpConfig(AppConfig):
-    name = 'lfp'
+    name = 'lfp_scheduler'
