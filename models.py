@@ -10,10 +10,11 @@ class UserData(models.Model):
 	accessExpireTime = models.DateTimeField(null=True)
 	calendarId = models.TextField(null=True)
 
+''' TODO: Fix instance saving issues (line 19)
 @receiver(post_save, sender=User)
 def saveUserData(sender, instance, created, **kwargs):
 	if created:
 		UserData.objects.create(user=instance)
 	else:
 		instance.userdata.save()
-
+'''
