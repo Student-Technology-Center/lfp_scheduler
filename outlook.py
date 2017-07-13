@@ -6,7 +6,6 @@ from datetime import datetime, date, time, timedelta
 outlookApiEndpoint = 'https://outlook.office.com/api/v2.0{0}'
 stcUser = '/users/StudentTechnology.Center@wwu.edu'
 
-
 # Generic API call
 def makeApiCall(method, url, token, userEmail, payload=None, params=None, headers=None, expected=requests.codes.ok):
 	hdrs= {
@@ -55,7 +54,7 @@ def getMe(token):
 
 def getCalendars(data):
 	url = outlookApiEndpoint.format(stcUser + '/calendars')
-	return makeApiCall('GET', url, data.accessToken, data.user.email)
+	return makeApiCall('GET', url, data.accessToken, data.email)
 
 def getCalendarView(data):
 	url = outlookApiEndpoint.format(stcUser + '/'+data.calendarId+'/calendarview')
@@ -67,7 +66,7 @@ def getCalendarView(data):
 	params = {'startDateTime':dayStart.isoformat(),
 		'endDateTime':dayEnd.isoformat()}
 
-	return makeApiCall('GET', url, data.accessToken, data.user.email, params=params, headers={'Prefer':'outlook.timezone="America/Los_Angeles"'})
+	return makeApiCall('GET', url, data.accessToken, data.email, params=params, headers={'Prefer':'outlook.timezone="America/Los_Angeles"'})
 	#res = makeApiCall('GET', url, token, email, params=params)
 
 BODY_STR = ("<br>This confirms your appointment on {0} at {1} at the "+
@@ -116,5 +115,5 @@ def createAppointment(data, startTime, name, prof, classCode, email, wNum, phone
 		}]
 	}
 
-	return makeApiCall('POST', url, data.accessToken, data.user.email, payload=body, expected=requests.codes.created)
+	return makeApiCall('POST', url, data.accessToken, data.email, payload=body, expected=requests.codes.created)
 

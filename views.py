@@ -12,8 +12,10 @@ import json
 
 @login_required
 def lfp(request):
-	user = request.user
-	userdata = request.user.userdata
+
+	#user = request.user
+	#userdata = request.user.userdata
+	lfpdata = LfpData.load()
 
 	authResult = authhelper.authorize(request)
 	if authResult != None:
@@ -22,7 +24,7 @@ def lfp(request):
 	if (request.method == 'POST'):
 		startTime = datetime.datetime.strptime(request.POST['begin_time'], '%Y-%m-%d %H:%M')
 		outlook.createAppointment(
-			userdata,
+			lfpdata,
 			startTime,
 			request.POST['client_name'],
 			request.POST['client_prof'],
@@ -35,13 +37,13 @@ def lfp(request):
 	else: # Assume request was GET
 		#TODO: This should DEFINITELY not be done every reload... do only after full auth refresh?
 		#TODO: Check for return before dereferencing None
-		outlookMe = outlook.getMe(userdata.accessToken)
-		if outlookMe['EmailAddress'] != user.email:
+		outlookMe = outlook.getMe(lfpdata.accessToken)
+		if outlookMe['EmailAddress'] != lfpdata.email:
 			print("Emails don't match! Replacing...")
-			user.email = outlookMe['EmailAddress']
-			user.save()
+			lfpdata.email = outlookMe['EmailAddress']
+			lfpdata.save()
 
-	calendars = outlook.getCalendars(userdata)
+	calendars = outlook.getCalendars(lfpdata)
 
 	# Find the proper calendar ID
 	# TODO: Cache this for performance
@@ -49,8 +51,8 @@ def lfp(request):
 		print(item['Name'])
 		if (item['Name'] == 'Large Format Printer'):
 			print('id: ' + item['Id'])
-			userdata.calendarId = item['Id']
-			user.save()
+			lfpdata.calendarId = item['Id']
+			lfpdata.save()
 	
 	return render(request, 'lfp/form.html')
 
@@ -61,6 +63,6 @@ def gettoken(request):
 	token = authhelper.getTokenFromCode(authCode, redirectUri)
 	if token == None:
 		print("ERROR: Failed to get token from auth code!")
-	authhelper.populateWithToken(request.user, token)
+	authhelper.populateWithToken(LfpData.load(), token)
 
 	return HttpResponseRedirect(reverse('home'))

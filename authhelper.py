@@ -70,18 +70,18 @@ def getTokenFromRefresh(refreshToken, redirectUri):
 	except:
 		return None
 
-def populateWithToken(user, token):
-	user.userdata.accessToken = token['access_token']
+def populateWithToken(lfpdata, token):
+	lfpdata.accessToken = token['access_token']
 	delta = token['expires_in']
 	# Add extra 5 minute refresh buffer
-	user.userdata.accessExpireTime = timezone.now() + timedelta(seconds=delta - 300)
-	user.userdata.refreshToken = token['refresh_token']
-	user.save()
+	lfpdata.accessExpireTime = timezone.now() + timedelta(seconds=delta - 300)
+	lfpdata.refreshToken = token['refresh_token']
+	lfpdata.save()
 
 # If function succeeds, return None, else return redirect uri
 def authorize(request):
 	print('authorizing...')
-	data = request.user.userdata
+	data = LfpData.load()
 	if data.accessToken != None and data.accessExpireTime != None and datetime.now(timezone.utc) < data.accessExpireTime:
 		# TODO: make a test API call
 		print('expire time: '+str(data.accessExpireTime)+' current time: '+str(timezone.now()))
@@ -93,7 +93,7 @@ def authorize(request):
 			data.accessToken = None
 			data.accessExpireTime = None
 			data.refreshToken = None
-			request.user.save()
+			data.save()
 			return request.build_absolute_uri(reverse('home'))
 		else:
 			populateWithToken(request.user, token)
