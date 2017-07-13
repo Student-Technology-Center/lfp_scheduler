@@ -5,11 +5,11 @@ import json
 import time
 from datetime import datetime, timedelta
 import requests
-import lfp_password
+from lfp_scheduler import lfp_pw
 
 # Client ID and secret - from lfp_password.py
-client_id = lfp_password.LFP_CLIENT_ID
-client_secret = lfp_password.LFP_CLIENT_SECRET
+client_id = lfp_pw.LFP_CLIENT_ID
+client_secret = lfp_pw.LFP_CLIENT_SECRET
 
 authority = 'https://login.microsoftonline.com'
 

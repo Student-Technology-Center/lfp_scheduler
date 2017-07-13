@@ -1,0 +1,4 @@
+# REPLACE WITH REAL CLIENT ID AND SECRET
+# TODO: Find a better solution :/
+LFP_CLIENT_ID = ''
+LFP_CLIENT_SECRET = ''
