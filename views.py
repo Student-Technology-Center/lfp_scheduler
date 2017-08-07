@@ -5,6 +5,7 @@ from django.contrib.auth.decorators import login_required
 
 from lfp_scheduler import authhelper
 from lfp_scheduler import outlook
+from lfp_scheduler.models import LfpData
 
 import time
 import datetime
@@ -19,6 +20,7 @@ def lfp(request):
 
     authResult = authhelper.authorize(request)
     if authResult != None:
+        print(authResult)
         return HttpResponseRedirect(authResult)
 
     if (request.method == 'POST'):
@@ -54,7 +56,7 @@ def lfp(request):
             lfpdata.calendarId = item['Id']
             lfpdata.save()
     
-    return render(request, 'lfp/form.html')
+    return render(request, 'form.html')
 
 @login_required
 def gettoken(request):
@@ -65,4 +67,4 @@ def gettoken(request):
         print("ERROR: Failed to get token from auth code!")
     authhelper.populateWithToken(LfpData.load(), token)
 
-    return HttpResponseRedirect(reverse('home'))
+    return HttpResponseRedirect(reverse('lfp'))

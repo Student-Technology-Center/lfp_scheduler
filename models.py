@@ -13,11 +13,11 @@ class UserData(models.Model):
 '''
 
 class LfpData(models.Model):
-    accessToken = models.TextField()
-    refreshToken = models.TextField()
-    accessExpireTime = models.DateTimeField()
-    calendarId = models.TextField()
-    email = models.EmailField()
+    accessToken = models.TextField(null=True)
+    refreshToken = models.TextField(null=True)
+    accessExpireTime = models.DateTimeField(null=True)
+    calendarId = models.TextField(null=True)
+    email = models.EmailField(null=True)
 
     def save(self, *args, **kwargs):
         self.__class__.objects.exclude(id=self.id).delete()

@@ -1,0 +1,99 @@
+<header>
+	<link rel="stylesheet" href="https://unpkg.com/flatpickr/dist/flatpickr.min.css">
+	<script src="https://unpkg.com/flatpickr"></script>
+
+	<style>
+		body
+		{
+			font-family:Arial, Helvetica, sans-serif;
+		}
+		legend
+		{
+			color: #52a5c4;
+			font-size: 20px;
+		}
+		label
+		{
+			display: block;
+			line-height: 150%;
+			font-size: .85em;
+		}
+		fieldset
+		{
+			height: 90%;
+			border: 0;
+		}
+		input[type=text]
+		{
+			width: 100%;
+			padding: 8px 20px;
+			margin: 8px 0;
+			outline: 0px;
+			box-sizing: border-box;
+
+			transition: all 500ms linear;
+		}
+
+		input[type=text]:focus
+		{
+			outline: 5px;
+			outline-color: lightblue;
+		}
+		button[type=submit]
+		{
+			display: block;
+			float: left;
+			background-color: lightblue;
+			border-radius: 5px;
+			border: 0px;
+			width: 100px;
+			height: 25px;
+			outline: 0px;
+
+			transition: all 250ms linear
+		}
+		button[type=submit]:hover
+		{
+			background-color: #52a5c4;
+		}
+	</style>
+</header>
+<body>
+<form name="lfp" method="post" onsubmit="return validateInput()">
+	{% csrf_token %}
+	<fieldset>
+		<legend id="Lfpschedule">Schedule an LFP appointment..</legend>
+		<p><label>Client Name: </label><input name="client_name" type="text" placeholder="First Last" required></p>
+		<p><label>Professor Name: </label><input name="client_prof" type="text" placeholder="First Last" required></p>
+		<p><label>Class: </label><input name="client_class" type="text" placeholder="SCHD101" required></p>
+		<p><label>Western email: </label><input name="client_email" type="text" placeholder="Client@wwu.edu" required></p>
+		<p><label>W# (Without the W): </label><input name="client_w_num" type="text" placeholder="12345678" required></p>
+		<p><label>Phone #: </label><input name="client_phone_num" type="text" placeholder="999-999-9999" required></p>
+		<p><label>Priority: </label><input name="priority" type="text" value="1" required></p>
+		<p><label>Created by: </label><input name="created_by" type="text" placeholder="First Last" required></p>
+		<p><label>Date/Time: </label><input name="begin_time" id="calendar" type="text" placeholder="Select Date.." required></p>
+		<button type="submit">Submit</button>
+	</fieldset>
+</form>
+
+<p id="err"></p>
+
+</body>
+
+<script>
+flatpickr("#calendar", {enableTime: true, altInput: true})
+
+function validateInput()
+{
+	var w = document.forms["lfp"]["client_w_num"].value;
+    var pattern = /^\d{8}$/;
+
+	if (isNaN(w) || !pattern.test(w))
+	{
+		document.getElementById("err").innerHTML = "W# must be 8 numeric characters, don't include W!";
+		return false;
+	}
+	else
+		document.getElementById("err").innerHTML = "";
+}
+</script>

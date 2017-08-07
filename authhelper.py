@@ -6,6 +6,7 @@ import time
 from datetime import datetime, timedelta
 import requests
 from lfp_scheduler import lfp_pw
+from lfp_scheduler.models import LfpData
 
 # Client ID and secret - from lfp_password.py
 client_id = lfp_pw.LFP_CLIENT_ID
