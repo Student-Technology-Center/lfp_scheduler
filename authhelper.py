@@ -47,6 +47,7 @@ def getTokenFromCode(authCode, redirectUri):
     result = requests.post(token_url, data = postData)
 
     if result.status_code != requests.codes.ok:
+        print("getTokenFromCode returns {0} {1}".format(result.status_code, result.text))
         return None
     try:
         return result.json()
@@ -104,4 +105,3 @@ def authorize(request):
         print("Refresh token doesnt' exist! Going through auth process...")
         redirectUri = request.build_absolute_uri(reverse('gettoken'))
         return getSigninUrl(redirectUri)
-
