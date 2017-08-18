@@ -2,6 +2,7 @@ from django.shortcuts import render
 from django.http import HttpResponse, HttpResponseRedirect
 from django.urls import reverse
 from django.contrib.auth.decorators import login_required
+from django.http import Http404
 
 from lfp_scheduler import authhelper
 from lfp_scheduler import outlook
@@ -14,13 +15,11 @@ import json
 @login_required
 def lfp(request):
 
-    #user = request.user
-    #userdata = request.user.userdata
     lfpdata = LfpData.load()
 
     authResult = authhelper.authorize(request)
     if authResult != None:
-        print(authResult)
+        print("auth not complete, redirecting to {0}".format(authResult))
         return HttpResponseRedirect(authResult)
 
     if (request.method == 'POST'):
@@ -65,6 +64,8 @@ def gettoken(request):
     token = authhelper.getTokenFromCode(authCode, redirectUri)
     if token == None:
         print("ERROR: Failed to get token from auth code!")
-    authhelper.populateWithToken(LfpData.load(), token)
+        raise Http404("Failed to get auth token!")
+    else:
+        authhelper.populateWithToken(LfpData.load(), token)
 
     return HttpResponseRedirect(reverse('lfp'))
