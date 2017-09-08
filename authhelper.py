@@ -92,6 +92,7 @@ def authorize(request):
         print("Refreshing access for user "+request.user.username+" with refresh token!")
         token = getTokenFromRefresh(data.refreshToken, request.build_absolute_uri(reverse('gettoken')))
         if (token == None): # Refresh code might be expired
+            printf("Refresh token is probably expired! Resetting...")
             data.accessToken = None
             data.accessExpireTime = None
             data.refreshToken = None
@@ -102,6 +103,6 @@ def authorize(request):
             return None
     else:
         # Go through the auth process from the beginning
-        print("Refresh token doesnt' exist! Going through auth process...")
+        print("Refresh token doesn't exist! Going through auth process...")
         redirectUri = request.build_absolute_uri(reverse('gettoken'))
         return getSigninUrl(redirectUri)

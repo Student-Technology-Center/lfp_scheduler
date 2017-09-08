@@ -42,7 +42,7 @@ def makeApiCall(method, url, token, userEmail, payload=None, params=None, header
         return response.json()
     else:
         print("api call failed with code: " + str(response.status_code))
-        print("\ndump:\n"+response.text+"\n")
+        print("\ndump:\n"+response.text+"\nend dump\n")
         return None
 
 def getMe(token):

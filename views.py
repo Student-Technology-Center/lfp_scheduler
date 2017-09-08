@@ -39,7 +39,9 @@ def lfp(request):
         #TODO: This should DEFINITELY not be done every reload... do only after full auth refresh?
         #TODO: Check for return before dereferencing None
         outlookMe = outlook.getMe(lfpdata.accessToken)
-        if outlookMe['EmailAddress'] != lfpdata.email:
+        if outlookMe == None:
+            printf("API call failed!")
+        elif outlookMe['EmailAddress'] != lfpdata.email:
             print("Emails don't match! Replacing...")
             lfpdata.email = outlookMe['EmailAddress']
             lfpdata.save()
