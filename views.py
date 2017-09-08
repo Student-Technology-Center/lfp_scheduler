@@ -40,7 +40,7 @@ def lfp(request):
         #TODO: Check for return before dereferencing None
         outlookMe = outlook.getMe(lfpdata.accessToken)
         if outlookMe == None:
-            printf("API call failed!")
+            print("API call failed!")
         elif outlookMe['EmailAddress'] != lfpdata.email:
             print("Emails don't match! Replacing...")
             lfpdata.email = outlookMe['EmailAddress']

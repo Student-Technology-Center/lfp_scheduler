@@ -92,7 +92,7 @@ def authorize(request):
         print("Refreshing access for user "+request.user.username+" with refresh token!")
         token = getTokenFromRefresh(data.refreshToken, request.build_absolute_uri(reverse('gettoken')))
         if (token == None): # Refresh code might be expired
-            printf("Refresh token is probably expired! Resetting...")
+            print("Refresh token is probably expired! Resetting...")
             data.accessToken = None
             data.accessExpireTime = None
             data.refreshToken = None

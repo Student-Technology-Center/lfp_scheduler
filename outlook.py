@@ -48,7 +48,7 @@ def makeApiCall(method, url, token, userEmail, payload=None, params=None, header
 def getMe(token):
     getMeUrl = outlookApiEndpoint.format('/me')
 
-    queryParams = {'$select':'DisplayName,EmailAddress'}
+    queryParams = {'$select':'displayName,mail'}
 
     return makeApiCall('GET', getMeUrl, token, '', params=queryParams)
 
