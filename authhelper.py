@@ -75,13 +75,14 @@ def getTokenFromRefresh(refreshToken, redirectUri):
     except:
         return None
 
-def populateWithToken(lfpdata, token):
-    lfpdata.accessToken = token['access_token']
+def populateWithToken(token):
+    data =  LfpData.load()
+    data.accessToken = token['access_token']
     delta = token['expires_in']
     # Add extra 5 minute refresh buffer
-    lfpdata.accessExpireTime = timezone.now() + timedelta(seconds=delta - 300)
-    lfpdata.refreshToken = token['refresh_token']
-    lfpdata.save()
+    data.accessExpireTime = timezone.now() + timedelta(seconds=delta - 300)
+    data.refreshToken = token['refresh_token']
+    data.save()
 
 # If function succeeds, return None, else return redirect uri
 def authorize(request):
@@ -99,7 +100,7 @@ def authorize(request):
     elif data.refreshToken != None:
         print("Refreshing access for user "+request.user.username+" with refresh token!")
         token = getTokenFromRefresh(data.refreshToken, request.build_absolute_uri(reverse('gettoken')))
-        if (token == None or outlook.getMe(token) == None): # Refresh code might be expired
+        if (token == None or outlook.getMe(token['access_token']) == None): # Refresh code might be expired
             print("Refresh token is probably expired! Resetting...")
             data.accessToken = None
             data.accessExpireTime = None
