@@ -97,7 +97,7 @@ def authorize(request):
     elif data.refreshToken != None:
         print("Refreshing access for user "+request.user.username+" with refresh token!")
         token = getTokenFromRefresh(data.refreshToken, request.build_absolute_uri(reverse('gettoken')))
-        if (token == None): # Refresh code might be expired
+        if (token == None or outlook.getMe(data.accessToken) == None): # Refresh code might be expired
             print("Refresh token is probably expired! Resetting...")
             data.accessToken = None
             data.accessExpireTime = None
