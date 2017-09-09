@@ -22,7 +22,7 @@ token_url = '{0}{1}'.format(authority, '/common/oauth2/v2.0/token')
 # The scopes required by the app
 scopes = ['openid',
         'offline_access',
-        'https://outlook.office.com/calendars.readwrite.shared',
+        'Calendars.ReadWrite.Shared',
         ]
 
 def getSigninUrl(redirectUri):
@@ -81,7 +81,7 @@ def populateWithToken(lfpdata, token):
     lfpdata.save()
 
 # If function succeeds, return None, else return redirect uri
-def authorize(request):
+def authorize(request, lfpdata):
     print('authorizing...')
     data = LfpData.load()
     if data.accessToken != None and data.accessExpireTime != None and datetime.now(timezone.utc) < data.accessExpireTime:
@@ -99,7 +99,7 @@ def authorize(request):
             data.save()
             return request.build_absolute_uri(reverse('home'))
         else:
-            populateWithToken(request.user, token)
+            populateWithToken(lfpdata, token)
             return None
     else:
         # Go through the auth process from the beginning
