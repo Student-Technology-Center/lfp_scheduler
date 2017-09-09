@@ -81,7 +81,7 @@ def populateWithToken(lfpdata, token):
     lfpdata.save()
 
 # If function succeeds, return None, else return redirect uri
-def authorize(request, lfpdata):
+def authorize(request):
     print('authorizing...')
     data = LfpData.load()
     if data.accessToken != None and data.accessExpireTime != None and datetime.now(timezone.utc) < data.accessExpireTime:
@@ -99,7 +99,7 @@ def authorize(request, lfpdata):
             data.save()
             return request.build_absolute_uri(reverse('home'))
         else:
-            populateWithToken(lfpdata, token)
+            populateWithToken(data, token)
             return None
     else:
         # Go through the auth process from the beginning
