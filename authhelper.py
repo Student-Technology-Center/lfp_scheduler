@@ -87,6 +87,7 @@ def authorize(request):
     data = LfpData.load()
     if data.accessToken != None and data.accessExpireTime != None and datetime.now(timezone.utc) < data.accessExpireTime:
         if outlook.getMe(data.accessToken) == None:
+            print("Test api call failed, resetting access token and redirecting!")
             data.accessToken = None
             data.accessExpireTime = None
             data.save()
