@@ -22,6 +22,8 @@ token_url = '{0}{1}'.format(authority, '/common/oauth2/v2.0/token')
 
 # The scopes required by the app
 scopes = ['openid',
+        'email',
+        'profile',
         'offline_access',
         'Calendars.ReadWrite.Shared',
         ]
@@ -97,7 +99,7 @@ def authorize(request):
     elif data.refreshToken != None:
         print("Refreshing access for user "+request.user.username+" with refresh token!")
         token = getTokenFromRefresh(data.refreshToken, request.build_absolute_uri(reverse('gettoken')))
-        if (token == None or outlook.getMe(data.accessToken) == None): # Refresh code might be expired
+        if (token == None or outlook.getMe(token) == None): # Refresh code might be expired
             print("Refresh token is probably expired! Resetting...")
             data.accessToken = None
             data.accessExpireTime = None

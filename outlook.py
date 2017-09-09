@@ -3,7 +3,8 @@ import uuid
 import json
 from datetime import datetime, date, time, timedelta
 
-outlookApiEndpoint = 'https://outlook.office.com/api/v2.0{0}'
+#outlookApiEndpoint = 'https://outlook.office.com/api/v2.0{0}'
+outlookApiEndpoint = 'https://graph.microsoft.com/v1.0{0}'
 stcUser = '/users/StudentTechnology.Center@wwu.edu'
 
 # Generic API call
@@ -42,7 +43,7 @@ def makeApiCall(method, url, token, userEmail, payload=None, params=None, header
         return response.json()
     else:
         print("api call failed with code: " + str(response.status_code))
-        print("\ndump:\n"+response.text+"\nend dump\n")
+        print("dump:\n"+response.text+"\nend dump\n")
         return None
 
 def getMe(token):

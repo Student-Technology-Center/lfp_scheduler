@@ -74,4 +74,4 @@ def gettoken(request):
     else:
         authhelper.populateWithToken(LfpData.load(), token)
 
-    return HttpResponseRedirect(reverse('lfp'))
+    return HttpResponseRedirect(request.build_absolute_uri(reverse('lfp')))
