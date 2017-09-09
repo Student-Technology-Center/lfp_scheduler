@@ -17,7 +17,7 @@ def lfp(request):
 
     lfpdata = LfpData.load()
 
-    authResult = authhelper.authorize(request)
+    authResult = authhelper.authorize(request, lfpdata)
     if authResult != None:
         print("auth not complete, redirecting to {0}".format(authResult))
         return HttpResponseRedirect(authResult)
