@@ -17,6 +17,7 @@ def lfp(request):
 
     lfpdata = LfpData.load()
 
+    print("uris:")
     print(request.build_absolute_uri(reverse('lfp')))
     print(request.build_absolute_uri(reverse('gettoken')))
 
