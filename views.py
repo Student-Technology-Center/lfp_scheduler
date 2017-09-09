@@ -20,6 +20,8 @@ def lfp(request):
     print("uris:")
     print(request.build_absolute_uri(reverse('lfp')))
     print(request.build_absolute_uri(reverse('gettoken')))
+    print("access:")
+    print(lfpdata.accessToken)
 
     authResult = authhelper.authorize(request)
     if authResult != None:
@@ -72,6 +74,6 @@ def gettoken(request):
         print("ERROR: Failed to get token from auth code!")
         raise Http404("Failed to get auth token!")
     else:
-        authhelper.populateWithToken(LfpData.load(), token)
+        authhelper.populateWithToken(token)
 
     return HttpResponseRedirect(request.build_absolute_uri(reverse('lfp')))

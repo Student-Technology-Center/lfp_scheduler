@@ -26,6 +26,8 @@ scopes = ['openid',
         'profile',
         'offline_access',
         'Calendars.ReadWrite.Shared',
+        'Mail.Send',
+        'User.Read',
         ]
 
 def getSigninUrl(redirectUri):
@@ -76,7 +78,7 @@ def getTokenFromRefresh(refreshToken, redirectUri):
         return None
 
 def populateWithToken(token):
-    data =  LfpData.load()
+    data = LfpData.load()
     data.accessToken = token['access_token']
     delta = token['expires_in']
     # Add extra 5 minute refresh buffer
@@ -108,7 +110,7 @@ def authorize(request):
             data.save()
             return request.build_absolute_uri(reverse('lfp'))
         else:
-            populateWithToken(data, token)
+            populateWithToken(token)
             return None
     else:
         # Go through the auth process from the beginning
