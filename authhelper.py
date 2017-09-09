@@ -7,6 +7,7 @@ from datetime import datetime, timedelta
 import requests
 from lfp_scheduler import lfp_pw
 from lfp_scheduler.models import LfpData
+from lfp_scheduler import outlook
 
 # Client ID and secret - from lfp_password.py
 client_id = lfp_pw.LFP_CLIENT_ID
@@ -85,7 +86,11 @@ def authorize(request):
     print('authorizing...')
     data = LfpData.load()
     if data.accessToken != None and data.accessExpireTime != None and datetime.now(timezone.utc) < data.accessExpireTime:
-        # TODO: make a test API call
+        if outlook.getMe(data.accessToken) == None:
+            data.accessToken = None
+            data.accessExpireTime = None
+            data.save()
+            return request.build_absolute_uri(reverse('lfp'))
         print('expire time: '+str(data.accessExpireTime)+' current time: '+str(timezone.now()))
         return None
     elif data.refreshToken != None:
@@ -97,7 +102,7 @@ def authorize(request):
             data.accessExpireTime = None
             data.refreshToken = None
             data.save()
-            return request.build_absolute_uri(reverse('home'))
+            return request.build_absolute_uri(reverse('lfp'))
         else:
             populateWithToken(data, token)
             return None
