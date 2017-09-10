@@ -60,15 +60,16 @@ def lfp(request):
     # TODO: Cache this for performance
     for item in calendars['value']:
         print(item)
-        if (item['Name'] == 'Large Format Printer'):
-            print('id: ' + item['Id'])
-            lfpdata.calendarId = item['Id']
+        if (item['name'] == 'Large Format Printer'):
+            print('id: ' + item['id'])
+            lfpdata.calendarId = item['id']
             lfpdata.save()
     
     return render(request, 'form.html')
 
 @login_required
 def gettoken(request):
+    # TODO: Check request.GET['state']
     authCode = request.GET['code']
     redirectUri = request.build_absolute_uri(reverse('gettoken'))
     token = authhelper.getTokenFromCode(authCode, redirectUri)
@@ -76,6 +77,6 @@ def gettoken(request):
         print("ERROR: Failed to get token from auth code!")
         raise Http404("Failed to get auth token!")
     else:
-        authhelper.populateWithToken(token)
+        authhelper.saveToken(token)
 
     return HttpResponseRedirect(request.build_absolute_uri(reverse('lfp')))

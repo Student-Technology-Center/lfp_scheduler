@@ -3,15 +3,14 @@ import uuid
 import json
 from datetime import datetime, date, time, timedelta
 
-outlookApiEndpoint = 'https://outlook.office.com/api/v2.0{0}'
-#outlookApiEndpoint = 'https://graph.microsoft.com/v1.0{0}'
+#graphEndpoint = 'https://outlook.office.com/api/v2.0{0}'
+graphEndpoint = 'https://graph.microsoft.com/v1.0{0}'
 stcUser = '/users/StudentTechnology.Center@wwu.edu'
 
 # Generic API call
 def makeApiCall(method, url, token, userEmail, payload=None, params=None, headers=None, expected=requests.codes.ok):
     hdrs= {
-        'X-AnchorMailbox':userEmail,
-        'User-Agent':'LFP Scheduler/1.0',
+        'User-Agent':'lfp_scheduler/1.0',
         'Authorization':'Bearer {0}'.format(token),
         'Accept': 'application/json',
     }
@@ -47,18 +46,18 @@ def makeApiCall(method, url, token, userEmail, payload=None, params=None, header
         return None
 
 def getMe(token):
-    getMeUrl = outlookApiEndpoint.format('/me')
+    getMeUrl = graphEndpoint.format('/me')
 
     queryParams = {'$select': 'displayName,mail'}
 
     return makeApiCall('GET', getMeUrl, token, '', params=queryParams)
 
 def getCalendars(data):
-    url = outlookApiEndpoint.format(stcUser + '/calendars')
+    url = graphEndpoint.format(stcUser + '/calendars')
     return makeApiCall('GET', url, data.accessToken, data.email)
 
 def getCalendarView(data):
-    url = outlookApiEndpoint.format(stcUser + '/'+data.calendarId+'/calendarview')
+    url = graphEndpoint.format(stcUser + '/'+data.calendarId+'/calendarview')
 
     dayStart = datetime.combine(date.today(), time())
 
@@ -82,15 +81,15 @@ BODY_STR = ("<br>This confirms your appointment on {0} at {1} at the "+
 "Priority: {8}<br>Appointment made by: {9}<br>")
 
 def createAppointment(data, startTime, name, prof, classCode, email, wNum, phone, priority, creator):
-    url = outlookApiEndpoint.format(stcUser + '/calendars/' + data.calendarId+'/events')
+    url = graphEndpoint.format(stcUser + '/calendars/' + data.calendarId+'/events')
     
     endTime = startTime + timedelta(hours=1)
 
     body = {
-        'Subject':'LFP w/ '+name.split()[0],
-        'Body': {
-            'ContentType':'HTML',
-            'Content':BODY_STR.format(str(startTime.month)+'/'+str(startTime.day),
+        'subject':'LFP w/ '+name.split()[0],
+        'body': {
+            'contentType':'HTML',
+            'content':BODY_STR.format(str(startTime.month)+'/'+str(startTime.day),
                 startTime.strftime('%I:%M %p'),
                 name,
                 prof,
@@ -100,19 +99,19 @@ def createAppointment(data, startTime, name, prof, classCode, email, wNum, phone
                 phone,
                 priority,
                 creator)},
-        'Start': {
+        'start': {
             'DateTime':startTime.isoformat(),
             #TODO: convert to UTC prior
             'TimeZone':'Pacific Standard Time', },
-        'End': {
+        'end': {
             'DateTime':endTime.isoformat(),
             'TimeZone':'Pacific Standard Time', },
-        'Attendees': [{
-            'EmailAddress': {
-                'Address':email,
-                'Name':name
+        'attendees': [{
+            'emailAddress': {
+                'address':email,
+                'name':name
             },
-            'Type':'Optional'
+            'type':'Optional'
         }]
     }
 
