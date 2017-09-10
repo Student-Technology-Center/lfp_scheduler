@@ -3,8 +3,8 @@ import uuid
 import json
 from datetime import datetime, date, time, timedelta
 
-#outlookApiEndpoint = 'https://outlook.office.com/api/v2.0{0}'
-outlookApiEndpoint = 'https://graph.microsoft.com/v1.0{0}'
+outlookApiEndpoint = 'https://outlook.office.com/api/v2.0{0}'
+#outlookApiEndpoint = 'https://graph.microsoft.com/v1.0{0}'
 stcUser = '/users/StudentTechnology.Center@wwu.edu'
 
 # Generic API call

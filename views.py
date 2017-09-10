@@ -59,7 +59,7 @@ def lfp(request):
     # Find the proper calendar ID
     # TODO: Cache this for performance
     for item in calendars['value']:
-        print(item['Name'])
+        print(item)
         if (item['Name'] == 'Large Format Printer'):
             print('id: ' + item['Id'])
             lfpdata.calendarId = item['Id']
