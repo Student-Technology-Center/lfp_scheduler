@@ -37,8 +37,8 @@ def buildSigninUrl(redirectUri):
     params = { 'client_id': client_id,
              'redirect_uri': redirectUri,
              'response_type': 'code',
-             'scope': ' '.join(str(i) for i in scopes)
-             'state': '1337' # TODO: Encode stuff in this
+             'scope': ' '.join(str(i) for i in scopes),
+             'state': '1337', # TODO: encode stuff in here
             }
     
     signin_url = authorize_url.format(urlencode(params))
