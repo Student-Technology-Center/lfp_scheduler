@@ -47,10 +47,12 @@ def lfp(request):
         outlookMe = outlook.getMe(lfpdata.accessToken)
         if outlookMe == None:
             print("API call failed!")
-        elif outlookMe['EmailAddress'] != lfpdata.email:
-            print("Emails don't match! Replacing...")
-            lfpdata.email = outlookMe['EmailAddress']
-            lfpdata.save()
+        else:
+            print(outlookMe)
+            if outlookMe['EmailAddress'] != lfpdata.email:
+                print("Emails don't match! Replacing...")
+                lfpdata.email = outlookMe['EmailAddress']
+                lfpdata.save()
 
     calendars = outlook.getCalendars(lfpdata)
 

@@ -3,15 +3,6 @@ from django.db.models.signals import post_save
 from django.dispatch import receiver
 from django.contrib.sites.models import Site
 
-'''
-class UserData(models.Model):
-    user = models.OneToOneField(User, on_delete=models.CASCADE)
-    accessToken = models.TextField(null=True)
-    refreshToken = models.TextField(null=True)
-    accessExpireTime = models.DateTimeField(null=True)
-    calendarId = models.TextField(null=True)
-'''
-
 class LfpData(models.Model):
     accessToken = models.TextField(null=True)
     refreshToken = models.TextField(null=True)
@@ -29,12 +20,3 @@ class LfpData(models.Model):
             return cls.objects.get()
         except cls.DoesNotExist:
             return cls()
-
-''' TODO: Fix instance saving issues (line 19)
-@receiver(post_save, sender=User)
-def saveUserData(sender, instance, created, **kwargs):
-    if created:
-        UserData.objects.create(user=instance)
-    else:
-        instance.userdata.save()
-'''
