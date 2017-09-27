@@ -17,6 +17,12 @@ def lfp(request):
 
     lfpdata = LfpData.load()
 
+    print("uris:")
+    print(request.build_absolute_uri(reverse('lfp')))
+    print(request.build_absolute_uri(reverse('gettoken')))
+    print("access:")
+    print(lfpdata.accessToken)
+
     authResult = authhelper.authorize(request)
     if authResult != None:
         print("auth not complete, redirecting to {0}".format(authResult))
@@ -39,26 +45,37 @@ def lfp(request):
         #TODO: This should DEFINITELY not be done every reload... do only after full auth refresh?
         #TODO: Check for return before dereferencing None
         outlookMe = outlook.getMe(lfpdata.accessToken)
-        if outlookMe['EmailAddress'] != lfpdata.email:
-            print("Emails don't match! Replacing...")
-            lfpdata.email = outlookMe['EmailAddress']
-            lfpdata.save()
+        if outlookMe == None:
+            print("API call failed!")
+        else:
+            print(outlookMe)
+            if outlookMe['mail'] != lfpdata.email:
+                print("Emails don't match! Replacing...")
+                lfpdata.email = outlookMe['mail']
+                lfpdata.save()
 
     calendars = outlook.getCalendars(lfpdata)
+
+    if (calendars == None):
+        lfpdata.accessToken = None
+        lfpdata.accessExpireTime = None
+        lfpdata.save()
+        return HttpResponseRedirect(request.build_absolute_uri(reverse('lfp')))
 
     # Find the proper calendar ID
     # TODO: Cache this for performance
     for item in calendars['value']:
-        print(item['Name'])
-        if (item['Name'] == 'Large Format Printer'):
-            print('id: ' + item['Id'])
-            lfpdata.calendarId = item['Id']
+        print(item)
+        if (item['name'] == 'Large Format Printer'):
+            print('id: ' + item['id'])
+            lfpdata.calendarId = item['id']
             lfpdata.save()
     
     return render(request, 'form.html')
 
 @login_required
 def gettoken(request):
+    # TODO: Check request.GET['state']
     authCode = request.GET['code']
     redirectUri = request.build_absolute_uri(reverse('gettoken'))
     token = authhelper.getTokenFromCode(authCode, redirectUri)
@@ -66,6 +83,6 @@ def gettoken(request):
         print("ERROR: Failed to get token from auth code!")
         raise Http404("Failed to get auth token!")
     else:
-        authhelper.populateWithToken(LfpData.load(), token)
+        authhelper.saveToken(token)
 
-    return HttpResponseRedirect(reverse('lfp'))
+    return HttpResponseRedirect(request.build_absolute_uri(reverse('lfp')))

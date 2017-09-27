@@ -5,8 +5,10 @@ import json
 import time
 from datetime import datetime, timedelta
 import requests
+
 from lfp_scheduler import lfp_pw
 from lfp_scheduler.models import LfpData
+from lfp_scheduler import outlook
 
 # Client ID and secret - from lfp_password.py
 client_id = lfp_pw.LFP_CLIENT_ID
@@ -20,25 +22,31 @@ authorize_url = '{0}{1}'.format(authority, '/common/oauth2/v2.0/authorize?{0}')
 token_url = '{0}{1}'.format(authority, '/common/oauth2/v2.0/token')
 
 # The scopes required by the app
-scopes = ['openid',
-        'offline_access',
-        'https://outlook.office.com/calendars.readwrite.shared',
-        ]
+scopes = [
+    'openid',
+    'email',
+    'profile',
+    'offline_access',
+    'calendars.readwrite.shared',
+    'mail.send',
+    'user.read',
+]
 
-def getSigninUrl(redirectUri):
+def buildSigninUrl(redirectUri):
     # Build the query parameters for the signin url
     params = { 'client_id': client_id,
              'redirect_uri': redirectUri,
              'response_type': 'code',
-             'scope': ' '.join(str(i) for i in scopes)
+             'scope': ' '.join(str(i) for i in scopes),
+             'state': '1337', # TODO: encode stuff in here
             }
     
     signin_url = authorize_url.format(urlencode(params))
     return signin_url
 
-def getTokenFromCode(authCode, redirectUri):
+def getTokenFromCode(code, redirectUri):
     postData = { 'grant_type': 'authorization_code',
-        'code': authCode,
+        'code': code,
         'redirect_uri': redirectUri,
         'scope': ' '.join(str(i) for i in scopes),
         'client_id': client_id,
@@ -54,9 +62,25 @@ def getTokenFromCode(authCode, redirectUri):
     except:
         return None
 
-def getTokenFromRefresh(refreshToken, redirectUri):
+def saveToken(token):
+    data = LfpData.load()
+    data.accessToken = token['access_token']
+    delta = token['expires_in']
+    # Add extra 5 minute refresh buffer
+    data.accessExpireTime = timezone.now() + timedelta(seconds=delta - 300)
+    data.refreshToken = token['refresh_token']
+    data.save()
+
+def attemptRefresh(redirectUri):
+    data = LfpData.load()
+
+    signin = buildSigninUrl(redirectUri)
+
+    if data.refreshToken == None:
+        return signin
+
     postData = { 'grant_type': 'refresh_token',
-        'refresh_token': refreshToken,
+        'refresh_token': data.refreshToken,
         'redirect_uri': redirectUri,
         'scope': ' '.join(str(i) for i in scopes),
         'client_id': client_id,
@@ -65,43 +89,37 @@ def getTokenFromRefresh(refreshToken, redirectUri):
 
     result = requests.post(token_url, data = postData)
 
-    if (result.status_code != requests.codes.ok):
-        return None
-    try:
-        return result.json()
-    except:
-        return None
+    if result.status_code == requests.codes.ok:
+        try:
+            res = result.json()
+            if (testApiCall(res['access_token'])):
+                saveToken(res)
+                return None
+            else:
+                return signin
+        except:
+            return signin
+    else:
+        return signin
 
-def populateWithToken(lfpdata, token):
-    lfpdata.accessToken = token['access_token']
-    delta = token['expires_in']
-    # Add extra 5 minute refresh buffer
-    lfpdata.accessExpireTime = timezone.now() + timedelta(seconds=delta - 300)
-    lfpdata.refreshToken = token['refresh_token']
-    lfpdata.save()
+# TODO: maybe move this to outlook?
+def testApiCall(accessToken):
+    if outlook.getMe(accessToken) == None:
+        return False
+    else:
+        return True
 
 # If function succeeds, return None, else return redirect uri
 def authorize(request):
     print('authorizing...')
+
     data = LfpData.load()
+    redirectUri = request.build_absolute_uri(reverse('gettoken'))
+
     if data.accessToken != None and data.accessExpireTime != None and datetime.now(timezone.utc) < data.accessExpireTime:
-        # TODO: make a test API call
-        print('expire time: '+str(data.accessExpireTime)+' current time: '+str(timezone.now()))
-        return None
-    elif data.refreshToken != None:
-        print("Refreshing access for user "+request.user.username+" with refresh token!")
-        token = getTokenFromRefresh(data.refreshToken, request.build_absolute_uri(reverse('gettoken')))
-        if (token == None): # Refresh code might be expired
-            data.accessToken = None
-            data.accessExpireTime = None
-            data.refreshToken = None
-            data.save()
-            return request.build_absolute_uri(reverse('home'))
-        else:
-            populateWithToken(request.user, token)
+        if testApiCall(data.accessToken):
             return None
+        else:
+            return attemptRefresh(redirectUri)
     else:
-        # Go through the auth process from the beginning
-        print("Refresh token doesnt' exist! Going through auth process...")
-        redirectUri = request.build_absolute_uri(reverse('gettoken'))
-        return getSigninUrl(redirectUri)
+        return attemptRefresh(redirectUri)
