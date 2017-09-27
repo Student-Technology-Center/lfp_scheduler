@@ -56,6 +56,12 @@ def lfp(request):
 
     calendars = outlook.getCalendars(lfpdata)
 
+    if (calendars == None):
+        lfpdata.accessToken = None
+        lfpdata.accessExpireTime = None
+        lfpdata.save()
+        return HttpResponseRedirect(request.build_absolute_uri(reverse('lfp')))
+
     # Find the proper calendar ID
     # TODO: Cache this for performance
     for item in calendars['value']:
