@@ -9,7 +9,7 @@ from lfp_scheduler import outlook
 from lfp_scheduler.models import LfpData
 
 import time
-import datetime
+from datetime import datetime, timedelta
 import json
 
 @login_required
@@ -29,8 +29,8 @@ def lfp(request):
         return HttpResponseRedirect(authResult)
 
     if (request.method == 'POST'):
-        startTime = datetime.datetime.strptime(request.POST['begin_time'], '%Y-%m-%d %H:%M')
-        outlook.createAppointment(
+        startTime = datetime.strptime(request.POST['begin_time'], '%Y-%m-%d %H:%M')
+        result = outlook.createAppointment(
             lfpdata,
             startTime,
             request.POST['client_name'],
@@ -41,26 +41,24 @@ def lfp(request):
             request.POST['client_phone_num'],
             request.POST['priority'],
             request.POST['created_by'])
-    else: # Assume request was GET
-        #TODO: This should DEFINITELY not be done every reload... do only after full auth refresh?
-        #TODO: Check for return before dereferencing None
-        outlookMe = outlook.getMe(lfpdata.accessToken)
-        if outlookMe == None:
-            print("API call failed!")
+        if result == None:
+            return render(request, 'form.html', {'status': 'Form failed to submit! Refresh to re-authenticate', 'postPrev': request.POST})
         else:
-            print(outlookMe)
-            if outlookMe['mail'] != lfpdata.email:
-                print("Emails don't match! Replacing...")
-                lfpdata.email = outlookMe['mail']
-                lfpdata.save()
+            return render(request, 'form.html', {'status': 'LFP was submitted successfully!'})
+
+    #TODO: This should DEFINITELY not be done every reload... do only after full auth refresh?
+    #TODO: Check for return before dereferencing None
+    outlookMe = outlook.getMe(lfpdata.accessToken)
+    if outlookMe == None:
+        print("API call failed!")
+    else:
+        print(outlookMe)
+        if outlookMe['mail'] != lfpdata.email:
+            print("Emails don't match! Replacing...")
+            lfpdata.email = outlookMe['mail']
+            lfpdata.save()
 
     calendars = outlook.getCalendars(lfpdata)
-
-    if (calendars == None):
-        lfpdata.accessToken = None
-        lfpdata.accessExpireTime = None
-        lfpdata.save()
-        return HttpResponseRedirect(request.build_absolute_uri(reverse('lfp')))
 
     # Find the proper calendar ID
     # TODO: Cache this for performance
@@ -84,5 +82,7 @@ def gettoken(request):
         raise Http404("Failed to get auth token!")
     else:
         authhelper.saveToken(token)
+
+    
 
     return HttpResponseRedirect(request.build_absolute_uri(reverse('lfp')))

@@ -77,6 +77,7 @@ def attemptRefresh(redirectUri):
     signin = buildSigninUrl(redirectUri)
 
     if data.refreshToken == None:
+        print("refresh token doesn't exist! Redirecting to microsoft...")
         return signin
 
     postData = { 'grant_type': 'refresh_token',
@@ -118,8 +119,11 @@ def authorize(request):
 
     if data.accessToken != None and data.accessExpireTime != None and datetime.now(timezone.utc) < data.accessExpireTime:
         if testApiCall(data.accessToken):
+            print("Test api call succeeded, auth successful!")
             return None
         else:
+            print("unexpired token existed, but API call failed, attempting refresh...")
             return attemptRefresh(redirectUri)
     else:
+        print("Access token didn't exist or was expired, attempting refresh...")
         return attemptRefresh(redirectUri)

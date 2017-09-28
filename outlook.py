@@ -8,7 +8,7 @@ graphEndpoint = 'https://graph.microsoft.com/v1.0{0}'
 stcUser = '/users/StudentTechnology.Center@wwu.edu'
 
 # Generic API call
-def makeApiCall(method, url, token, userEmail, payload=None, params=None, headers=None, expected=requests.codes.ok):
+def makeApiCall(method, url, token, userEmail, payload=None, params=None, headers=None, expected=[requests.codes.ok]):
     hdrs= {
         'User-Agent':'lfp_scheduler/1.0',
         'Authorization':'Bearer {0}'.format(token),
@@ -38,7 +38,7 @@ def makeApiCall(method, url, token, userEmail, payload=None, params=None, header
         hdrs.update({'Content-Type':'application/json'})
         response = requests.post(url, headers=hdrs, data=json.dumps(payload), params=params)
     
-    if (response.status_code == expected):
+    if (response.status_code in expected):
         return response.json()
     else:
         print("api call failed with code: " + str(response.status_code))
@@ -115,5 +115,5 @@ def createAppointment(data, startTime, name, prof, classCode, email, wNum, phone
         }]
     }
 
-    return makeApiCall('POST', url, data.accessToken, data.email, payload=body, expected=requests.codes.created)
+    return makeApiCall('POST', url, data.accessToken, data.email, payload=body, expected=[requests.codes.created])
 

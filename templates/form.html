@@ -74,6 +74,9 @@
 		<p><label>Date/Time: </label><input name="begin_time" id="calendar" type="text" placeholder="Select Date.." required></p>
 		<button type="submit">Submit</button>
 	</fieldset>
+	{% if status != None %}
+	<p id="status">{{ status }}</p>
+	{% endif %}
 </form>
 
 <p id="err"></p>
@@ -96,4 +99,21 @@ function validateInput()
 	else
 		document.getElementById("err").innerHTML = "";
 }
+
+{% if postPrev != None %}
+function populateWithPrev()
+{
+	var w = document.forms["lfp"];
+	w["client_name"].value = {{ postPrev.client_name }};
+	w["client_prof"].value = {{ postPrev.client_prof }};
+	w["client_class"].value = {{ postPrev.client_class }};
+	w["client_email"].value = {{ postPrev.client_email }};
+	w["client_w_num"].value = {{ postPrev.client_w_num }};
+	w["client_phone_num"].value = {{ postPrev.client_phone_num }};
+	w["priority"].value = {{ postPrev.priority }};
+	w["created_by"].value = {{ postPrev.created_by }};
+	w["begin_time"].value = {{ postPrev.begin_time }};
+}
+{% endif %}
+
 </script>
