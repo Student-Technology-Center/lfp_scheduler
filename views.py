@@ -14,19 +14,16 @@ import json
 
 @login_required
 def lfp(request):
-
-    lfpdata = LfpData.load()
-
     print("uris:")
     print(request.build_absolute_uri(reverse('lfp')))
     print(request.build_absolute_uri(reverse('gettoken')))
-    print("access:")
-    print(lfpdata.accessToken)
 
     authResult = authhelper.authorize(request)
     if authResult != None:
         print("auth not complete, redirecting to {0}".format(authResult))
         return HttpResponseRedirect(authResult)
+
+    lfpdata = LfpData.load()
 
     if (request.method == 'POST'):
         startTime = datetime.strptime(request.POST['begin_time'], '%Y-%m-%d %H:%M')
@@ -53,7 +50,7 @@ def lfp(request):
         print("API call failed!")
     else:
         print(outlookMe)
-        if outlookMe['mail'] != lfpdata.email:
+        if lfpdata.email == None or outlookMe['mail'] != lfpdata.email:
             print("Emails don't match! Replacing...")
             lfpdata.email = outlookMe['mail']
             lfpdata.save()
@@ -82,7 +79,5 @@ def gettoken(request):
         raise Http404("Failed to get auth token!")
     else:
         authhelper.saveToken(token)
-
-    
 
     return HttpResponseRedirect(request.build_absolute_uri(reverse('lfp')))
