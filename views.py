@@ -12,6 +12,9 @@ import time
 from datetime import datetime, timedelta
 import json
 
+def new_lfp(request):
+    return render(request, "lfp.html")
+
 @login_required
 def lfp(request):
     print("uris:")

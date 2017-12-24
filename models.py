@@ -20,3 +20,13 @@ class LfpData(models.Model):
             return cls.objects.get()
         except cls.DoesNotExist:
             return cls()
+
+class LfpAppointment(models.Model):
+    start_time = models.DateTimeField()
+    name = models.CharField(max_length=255)
+    prof = models.CharField(max_length=255)
+    class_code = models.CharField(max_length=255)
+    email = models.EmailField()
+    w_num = models.IntegerField()
+    priority = models.IntegerField()
+    creator = models.CharField(max_length=255)
