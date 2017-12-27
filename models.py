@@ -22,7 +22,7 @@ class LfpData(models.Model):
             return cls()
 
 class LfpAppointment(models.Model):
-    start_time = models.DateTimeField()
+    start_time = models.CharField(max_length=255)
     name = models.CharField(max_length=255)
     prof = models.CharField(max_length=255)
     class_code = models.CharField(max_length=255)
@@ -30,3 +30,4 @@ class LfpAppointment(models.Model):
     w_num = models.IntegerField()
     priority = models.IntegerField()
     creator = models.CharField(max_length=255)
+    completed = models.BooleanField(default=False)
