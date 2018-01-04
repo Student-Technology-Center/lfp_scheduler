@@ -9,9 +9,33 @@
 		<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/fullcalendar/3.8.0/fullcalendar.min.js"></script>
 
 		<script type="text/javascript">
-		$(function(){
-			$('#calendar').fullCalendar({
+		function fetchEvents(start, end, timezone, callback)
+		{
+			$.ajax({
+				url: '/lfp/api/calendar',
+				dataType: 'json',
+				success: function(data, status)
+				{
+					var events = []
+					for (var i = 0; i < data.data.length; i++)
+					{
+						events.push({
+							title:"lfp "+data.data[i].priority,
+							start:data.data[i].start_time
+						})
+					}
+					callback(events)
+				}
+			})
+			//callback([{title: "test", start: "2018-01-04T13:00", end:"2018-01-04T14:00"}, {title: "test2", start: "2018-01-04T13:00", end:"2018-01-04T14:00"}])
+		}
+
+		$(function()
+		{
+			$('#calendar').fullCalendar(
+			{
 				defaultView: 'agendaWeek',
+				defaultTimedEventDuration: '01:00:00',
 				allDayDefault: false,
 				minTime: '6:00',
 				businessHours:[
@@ -36,9 +60,7 @@
 						end: '18:00'
 					}
 				],
-				events: function(start, end, timezone, callback) {
-					callback([{title: "test", start: "2017-12-25T13:00", end:"2017-12-25T14:00"}, {title: "test2", start: "2017-12-25T13:00", end:"2017-12-25T14:00"}])
-				}
+				events: fetchEvents
 			});
 		});
 		</script>
@@ -47,5 +69,6 @@
 	<body>
 		Here's some test content.
 		<div id="calendar"></div>
+		<div id="res"></div>
 	</body>
 </html>
