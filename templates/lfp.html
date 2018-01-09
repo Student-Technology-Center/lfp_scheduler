@@ -9,6 +9,13 @@
 		<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/fullcalendar/3.8.0/fullcalendar.min.js"></script>
 
 		<script type="text/javascript">
+
+		function form_submit(e)
+		{
+			alert("submitted");
+			e.preventDefault();
+		}
+
 		function fetchEvents(start, end, timezone, callback)
 		{
 			$.ajax({
@@ -27,12 +34,11 @@
 					callback(events)
 				}
 			})
-			//callback([{title: "test", start: "2018-01-04T13:00", end:"2018-01-04T14:00"}, {title: "test2", start: "2018-01-04T13:00", end:"2018-01-04T14:00"}])
 		}
 
 		$(function()
 		{
-			$('#calendar').fullCalendar(
+			$("#calendar").fullCalendar(
 			{
 				defaultView: 'agendaWeek',
 				defaultTimedEventDuration: '01:00:00',
@@ -62,6 +68,7 @@
 				],
 				events: fetchEvents
 			});
+			$("#appt_create").submit(form_submit);
 		});
 		</script>
 
@@ -69,6 +76,16 @@
 	<body>
 		Here's some test content.
 		<div id="calendar"></div>
-		<div id="res"></div>
+		<form id="appt_create" action="">
+			<p><label>Client Name: </label><input name="client_name" type="text" placeholder="First Last" required></p>
+			<p><label>Professor Name: </label><input name="client_prof" type="text" placeholder="First Last" required></p>
+			<p><label>Class: </label><input name="client_class" type="text" placeholder="SCHD101" required></p>
+			<p><label>Western email: </label><input name="client_email" type="text" placeholder="Client@wwu.edu" required></p>
+			<p><label>W# (Without the W): </label><input name="client_w_num" type="text" placeholder="12345678" required></p>
+			<p><label>Phone #: </label><input name="client_phone_num" type="text" placeholder="999-999-9999" required></p>
+			<p><label>Created by: </label><input name="created_by" type="text" placeholder="First Last" required></p>
+			<p><label>Date/Time: </label><input name="begin_time" id="calendar" type="text" placeholder="Select Date.." required></p>
+			<input type="submit"></input>
+		</form>
 	</body>
 </html>
