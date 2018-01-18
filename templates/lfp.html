@@ -12,8 +12,32 @@
 
 		function form_submit(e)
 		{
-			alert("submitted");
 			e.preventDefault();
+			form = $("#appt_create")[0];
+			// TODO: This is ridiculously stupid, but serializeArray() sucks
+			post_data = {"start_time":form.start_time.value,
+				"name":form.name.value,
+				"prof":form.prof.value,
+				"class_code":form.class_code.value,
+				"email":form.email.value,
+				"w_num":form.w_num.value,
+				"creator":form.creator.value};
+			alert(JSON.stringify(post_data));
+			$.ajax({
+				type: "POST",
+				url: '/lfp/api/event',
+				dataType: 'json',
+				data: JSON.stringify(post_data),
+				success: function(data, status)
+				{
+					$("#calendar").fullCalendar('refetchEvents');
+					alert("Posted event successfully!");
+				},
+				error: function(xhr, textStatus, error)
+				{
+					alert(textStatus);
+				}
+			})
 		}
 
 		function fetchEvents(start, end, timezone, callback)
@@ -44,6 +68,7 @@
 				defaultTimedEventDuration: '01:00:00',
 				allDayDefault: false,
 				minTime: '6:00',
+				timezone: 'UTC',
 				businessHours:[
 					{
 						dow: [0],
@@ -77,14 +102,14 @@
 		Here's some test content.
 		<div id="calendar"></div>
 		<form id="appt_create" action="">
-			<p><label>Client Name: </label><input name="client_name" type="text" placeholder="First Last" required></p>
-			<p><label>Professor Name: </label><input name="client_prof" type="text" placeholder="First Last" required></p>
-			<p><label>Class: </label><input name="client_class" type="text" placeholder="SCHD101" required></p>
-			<p><label>Western email: </label><input name="client_email" type="text" placeholder="Client@wwu.edu" required></p>
-			<p><label>W# (Without the W): </label><input name="client_w_num" type="text" placeholder="12345678" required></p>
+			<p><label>Client Name: </label><input name="name" type="text" placeholder="First Last" required></p>
+			<p><label>Professor Name: </label><input name="prof" type="text" placeholder="First Last" required></p>
+			<p><label>Class: </label><input name="class_code" type="text" placeholder="SCHD101" required></p>
+			<p><label>Western email: </label><input name="email" type="text" placeholder="Client@wwu.edu" required></p>
+			<p><label>W# (Without the W): </label><input name="w_num" type="text" placeholder="12345678" required></p>
 			<p><label>Phone #: </label><input name="client_phone_num" type="text" placeholder="999-999-9999" required></p>
-			<p><label>Created by: </label><input name="created_by" type="text" placeholder="First Last" required></p>
-			<p><label>Date/Time: </label><input name="begin_time" id="calendar" type="text" placeholder="Select Date.." required></p>
+			<p><label>Created by: </label><input name="creator" type="text" placeholder="First Last" required></p>
+			<p><label>Date/Time: </label><input name="start_time" id="calendar" type="text" placeholder="Select Date.." required></p>
 			<input type="submit"></input>
 		</form>
 	</body>
