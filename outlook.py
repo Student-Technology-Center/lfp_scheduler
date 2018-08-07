@@ -64,15 +64,16 @@ def getLfpCalendar(data):
             return item
     return None
 
-def getCalendarView(data, startDay, endDay):
-    url = graphEndpoint.format(stcUser + '/'+data.calendarId+'/calendarview')
+def getCalendarView(data):
+    url = graphEndpoint.format(stcUser + '/calendars/'+data.calendarId+'/calendarview')
 
     dayStart = datetime.combine(date.today(), time())
 
-    dayEnd = dayStart + timedelta(hours=24)
+    dayEnd = dayStart + timedelta(hours=48)
 
     params = {'startDateTime':dayStart.isoformat(),
         'endDateTime':dayEnd.isoformat()}
+    print("date range: {} {}".format(dayStart.isoformat(), dayEnd.isoformat()))
 
     return makeApiCall('GET', url, data.accessToken, data.email, params=params, headers={'Prefer':'outlook.timezone="America/Los_Angeles"'})
 

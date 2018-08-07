@@ -60,6 +60,12 @@ def lfp_api_calendar(request):
         res = authhelper.authorize(request)
         if res is not None:
             return HttpResponse("Refresh required: {}".format(res))
+        lfp_data = LfpData.load()
+
+    events = outlook.getCalendarView(lfp_data)
+    if events is not None:
+        for e in events['value']:
+            pass
 
     return HttpResponse("success")
 
