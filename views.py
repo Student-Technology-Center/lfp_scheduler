@@ -8,18 +8,15 @@ from lfp_scheduler import authhelper
 from lfp_scheduler import outlook
 from lfp_scheduler.models import LfpData
 
-import time
+import time, schedule
 from datetime import datetime, timedelta
 import json
 
-def new_lfp(request):
-    return render(request, "lfp.html")
-
-@login_required
+#@login_required
 def lfp(request):
-    print("uris:")
-    print(request.build_absolute_uri(reverse('lfp')))
-    print(request.build_absolute_uri(reverse('gettoken')))
+    #print("uris:")
+    #print(request.build_absolute_uri(reverse('lfp')))
+    #print(request.build_absolute_uri(reverse('gettoken')))
 
     authResult = authhelper.authorize(request)
     if authResult != None:
@@ -71,7 +68,10 @@ def lfp(request):
     
     return render(request, 'form.html')
 
-@login_required
+def lfp_public(request):
+    return render(request, "lfp.html");
+
+#@login_required
 def gettoken(request):
     # TODO: Check request.GET['state']
     authCode = request.GET['code']
@@ -82,5 +82,7 @@ def gettoken(request):
         raise Http404("Failed to get auth token!")
     else:
         authhelper.saveToken(token)
+        authhelper.save_calendar_info()
 
-    return HttpResponseRedirect(request.build_absolute_uri(reverse('lfp')))
+    return HttpResponseRedirect(request.build_absolute_uri(reverse('public')))
+

@@ -56,7 +56,15 @@ def getCalendars(data):
     url = graphEndpoint.format(stcUser + '/calendars')
     return makeApiCall('GET', url, data.accessToken, data.email)
 
-def getCalendarView(data):
+def getLfpCalendar(data):
+    url = graphEndpoint.format(stcUser + '/calendars');
+    cals = makeApiCall('GET', url, data.accessToken, data.email)
+    for item in cals['value']:
+        if item['name'] == 'Test Calendar':
+            return item
+    return None
+
+def getCalendarView(data, startDay, endDay):
     url = graphEndpoint.format(stcUser + '/'+data.calendarId+'/calendarview')
 
     dayStart = datetime.combine(date.today(), time())
@@ -67,7 +75,6 @@ def getCalendarView(data):
         'endDateTime':dayEnd.isoformat()}
 
     return makeApiCall('GET', url, data.accessToken, data.email, params=params, headers={'Prefer':'outlook.timezone="America/Los_Angeles"'})
-    #res = makeApiCall('GET', url, token, email, params=params)
 
 BODY_STR = ("<br>This confirms your appointment on {0} at {1} at the "+
 "Student Technology Center. If you are unable to keep this appointment, "+
