@@ -31,6 +31,10 @@ def start_time_valid(start_time):
 def w_num_valid(w_num):
     return len(str(w_num)) <= 8
 
+# Response structure:
+# { 'status':'error' or 'success',
+# 'message': 'status'
+# 'data': Specific to command, optional
 def construct_response(message, error=False, status=200, data=None):
     response = {'status':'error' if error else 'success', 'message':message}
     if data is not None:
@@ -41,8 +45,6 @@ def construct_response(message, error=False, status=200, data=None):
 def lfp_api_event(request):
     if (request.method != 'POST' and request.method != 'DELETE'):
         return construct_response('Invalid method! Must use POST or DELETE', error=True, status=405)
-
-    #calendar = LfpAppointment.objects.select_for_update()
 
     if (request.method == 'POST'):
         return construct_response('Created event!')
@@ -63,9 +65,12 @@ def lfp_api_calendar(request):
         lfp_data = LfpData.load()
 
     events = outlook.getCalendarView(lfp_data)
-    if events is not None:
+    ret_obj = []
+    if events is not None: # TODO: Check actual body for error
         for e in events['value']:
-            pass
+            ret_obj.append(e['subject'])
+    else:
+        pass
 
-    return HttpResponse("success")
+    return construct_response("Fetched events",data=ret_obj)
 
