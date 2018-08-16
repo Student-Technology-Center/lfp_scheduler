@@ -8,7 +8,7 @@ from lfp_scheduler import authhelper
 from lfp_scheduler import outlook
 from lfp_scheduler.models import LfpData
 
-import time, schedule
+import time
 from datetime import datetime, timedelta
 import json
 
