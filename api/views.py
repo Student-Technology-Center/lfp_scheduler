@@ -7,7 +7,7 @@ from django.views.decorators.csrf import csrf_exempt
 from django.utils import dateparse
 from django.db.models import F
 
-from datetime import datetime, time, timedelta
+from datetime import datetime, date, time, timedelta
 import json
 
 # 0 = Monday, 1 = Friday, 2 = Saturday, 3 = Sunday
@@ -58,17 +58,21 @@ def lfp_api_calendar(request):
 
     lfp_data = LfpData.load()
 
+    # TODO: Get this from request somehow
+    startDay = datetime.combine(date.today(), time())
+    endDay = startDay + timedelta(hours=72)
+
     if not authhelper.should_authorize(lfp_data):
         res = authhelper.authorize(request)
         if res is not None:
-            return HttpResponse("Refresh required: {}".format(res))
+            return construct_response("Refresh required: {}".format(res), error=True)
         lfp_data = LfpData.load()
 
-    events = outlook.getCalendarView(lfp_data)
+    events = outlook.getCalendarView(lfp_data, startDay.isoformat(), endDay.isoformat())
     ret_obj = []
-    if events is not None: # TODO: Check actual body for error
+    if events is not None and 'value' in events.keys(): # TODO: Check actual body for error
         for e in events['value']:
-            ret_obj.append(e['subject'])
+            ret_obj.append({'start_time':e['start']['dateTime']})
     else:
         pass
 
