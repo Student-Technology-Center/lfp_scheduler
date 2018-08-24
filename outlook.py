@@ -3,6 +3,8 @@ import uuid
 import json
 from datetime import datetime, date, time, timedelta
 
+from lfp_scheduler.models import LfpTempAppt
+
 #graphEndpoint = 'https://outlook.office.com/api/v2.0{0}'
 graphEndpoint = 'https://graph.microsoft.com/v1.0{0}'
 stcUser = '/users/StudentTechnology.Center@wwu.edu'
@@ -39,7 +41,11 @@ def makeApiCall(method, url, token, userEmail, payload=None, params=None, header
         response = requests.post(url, headers=hdrs, data=json.dumps(payload), params=params)
     
     if (response.status_code in expected):
-        return response.json()
+        print("RESPONSE TEXT ==={}===".format(response.text))
+        try:
+            return response.json()
+        except ValueError:
+            return {}
     else:
         print("api call failed with code: " + str(response.status_code))
         print("dump:\n"+response.text+"\nend dump\n")
@@ -63,6 +69,22 @@ def getLfpCalendar(data):
         if item['name'] == 'Test Calendar':
             return item
     return None
+
+def sendConfirmationEmail(data):
+    email = {'message': {
+        'subject': 'This is a test',
+        'body': {
+            'contentType': 'Text',
+            'content': 'This is a test of sending an email programmatically'
+        },
+        'toRecipients': [{
+            'emailAddress': {'address': 'nataraj@wwu.edu'}
+        }]
+    }}
+
+    url = graphEndpoint.format(stcUser + '/sendMail')
+
+    return makeApiCall('POST', url, data.accessToken, data.email, payload=email, expected=[requests.codes.accepted])
 
 # Gets the calendar view for the specified day range
 # Params are time isostrings corresponding to the day ranges

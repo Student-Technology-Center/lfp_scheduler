@@ -29,16 +29,19 @@ scopes = [
     'offline_access',
     'calendars.readwrite.shared',
     'mail.send',
+    'mail.send.shared',
     'user.read',
 ]
 
 def buildSigninUrl(redirectUri):
     # Build the query parameters for the signin url
     params = { 'client_id': client_id,
-             'redirect_uri': redirectUri,
-             'response_type': 'code',
-             'scope': ' '.join(str(i) for i in scopes),
-             'state': '1337', # TODO: encode stuff in here
+            'redirect_uri': redirectUri,
+            'response_type': 'code',
+            'scope': ' '.join(str(i) for i in scopes),
+            'state': '1337', # TODO: encode stuff in here
+            'login_hint': 'stctrain@wwu.edu',
+            #'prompt': 'login',
             }
     
     signin_url = authorize_url.format(urlencode(params))
