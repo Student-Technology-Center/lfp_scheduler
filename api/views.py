@@ -47,8 +47,7 @@ def lfp_api_event(request):
         return construct_response('Invalid method! Must use POST or DELETE', error=True, status=405)
 
     if (request.method == 'POST'):
-        r = outlook.sendConfirmationEmail(LfpData.load())
-        print(r)
+        #r = outlook.sendConfirmationEmail(LfpData.load())
         return construct_response('Created event!')
     else: # Method is DELETE
         return construct_response('You must be logged in to delete an event!', error=True, status=401)

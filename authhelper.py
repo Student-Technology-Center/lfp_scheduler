@@ -41,7 +41,7 @@ def buildSigninUrl(redirectUri):
             'scope': ' '.join(str(i) for i in scopes),
             'state': '1337', # TODO: encode stuff in here
             'login_hint': 'stctrain@wwu.edu',
-            #'prompt': 'login',
+            'prompt': 'login',
             }
     
     signin_url = authorize_url.format(urlencode(params))

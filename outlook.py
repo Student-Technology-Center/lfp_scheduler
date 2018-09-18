@@ -41,7 +41,6 @@ def makeApiCall(method, url, token, userEmail, payload=None, params=None, header
         response = requests.post(url, headers=hdrs, data=json.dumps(payload), params=params)
     
     if (response.status_code in expected):
-        print("RESPONSE TEXT ==={}===".format(response.text))
         try:
             return response.json()
         except ValueError:
