@@ -25,7 +25,6 @@ class LfpData(models.Model):
 class LfpTempAppt(models.Model):
     appt_id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     
-    # encoded_str = models.CharField(max_length=512)
     expire_time = models.DateTimeField(null=True)
 
     start_time = models.CharField(max_length=255)

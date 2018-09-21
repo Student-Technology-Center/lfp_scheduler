@@ -14,10 +14,6 @@ import json
 
 #@login_required
 def lfp(request):
-    #print("uris:")
-    #print(request.build_absolute_uri(reverse('lfp')))
-    #print(request.build_absolute_uri(reverse('gettoken')))
-
     authResult = authhelper.authorize(request)
     if authResult != None:
         print("auth not complete, redirecting to {0}".format(authResult))

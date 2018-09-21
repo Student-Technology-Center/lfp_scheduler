@@ -1,4 +1,4 @@
-from lfp_scheduler.models import LfpData
+from lfp_scheduler.models import LfpData, LfpTempAppt
 from lfp_scheduler import outlook, authhelper
 
 from django.http import HttpResponse, JsonResponse
@@ -31,6 +31,18 @@ def start_time_valid(start_time):
 def w_num_valid(w_num):
     return len(str(w_num)) <= 8
 
+# Expects a date range in the form of isoformat strings
+def get_events_in_range(startDay, endDay, lfp_data):
+    held_events = LfpTempAppt.objects.select_for_update().filter(start_time__range=(startDay, endDay))
+    outlook_events = outlook.getCalendarView(lfp_data, startDay, endDay)
+    ret = []
+    if outlook_events is not None and 'value' in outlook_events.keys(): # TODO: Check actual body for error
+        for e in outlook_events['value']:
+            ret.append({'start_time':e['start']['dateTime']})
+    for e in held_events:
+        ret.append({'start_time':e.start_time})
+    return ret
+
 # Response structure:
 # { 'status':'error' or 'success',
 # 'message': 'status'
@@ -61,7 +73,7 @@ def lfp_api_calendar(request):
 
     # TODO: Get this from request somehow
     startDay = datetime.combine(date.today(), time())
-    endDay = startDay + timedelta(hours=72)
+    endDay = startDay + timedelta(hours=72) 
 
     if not authhelper.should_authorize(lfp_data):
         res = authhelper.authorize(request)
@@ -69,13 +81,6 @@ def lfp_api_calendar(request):
             return construct_response("Refresh required: {}".format(res), error=True)
         lfp_data = LfpData.load()
 
-    events = outlook.getCalendarView(lfp_data, startDay.isoformat(), endDay.isoformat())
-    ret_obj = []
-    if events is not None and 'value' in events.keys(): # TODO: Check actual body for error
-        for e in events['value']:
-            ret_obj.append({'start_time':e['start']['dateTime']})
-    else:
-        pass
+    events = get_events_in_range(startDay.isoformat(), endDay.isoformat(), lfp_data)
 
-    return construct_response("Fetched events",data=ret_obj)
-
+    return construct_response("Fetched events",data=events)
