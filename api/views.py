@@ -60,6 +60,9 @@ def lfp_api_event(request):
 
     if (request.method == 'POST'):
         #r = outlook.sendConfirmationEmail(LfpData.load())
+        # TODO: Validate data here
+        temp = LfpTempAppt()
+
         return construct_response('Created event!')
     else: # Method is DELETE
         return construct_response('You must be logged in to delete an event!', error=True, status=401)
