@@ -27,7 +27,7 @@ class LfpTempAppt(models.Model):
     
     expire_time = models.DateTimeField(null=True)
 
-    start_time = models.CharField(max_length=255)
+    start_time = models.CharField(max_length=255) # MUST be isoformat
     name = models.CharField(max_length=255)
     prof = models.CharField(max_length=255)
     class_code = models.CharField(max_length=255)

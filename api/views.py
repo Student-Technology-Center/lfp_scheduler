@@ -4,7 +4,7 @@ from lfp_scheduler import outlook, authhelper
 from django.http import HttpResponse, JsonResponse
 from django.contrib.auth.decorators import login_required
 from django.views.decorators.csrf import csrf_exempt
-from django.utils import dateparse
+from django.utils import dateparse, timezone
 from django.db.models import F
 
 from datetime import datetime, date, time, timedelta
@@ -43,6 +43,9 @@ def get_events_in_range(startDay, endDay, lfp_data):
         ret.append({'start_time':e.start_time})
     return ret
 
+def get_events_at_hour(hour, lfp_data):
+    pass
+
 # Response structure:
 # { 'status':'error' or 'success',
 # 'message': 'status'
@@ -53,15 +56,29 @@ def construct_response(message, error=False, status=200, data=None):
         response.update({'data':data})
     return JsonResponse(response, status=status)
 
+def construct_appt(post_data):
+    appt = LfpTempAppt()
+
+    appt.expire_time = datetime.now(timezone.utc) + timedelta(minutes=65)
+    # TODO: SANITIZE HERE
+    appt.start_time = datetime.strptime(post_data['start_time'], '%Y-%m-%d %H:%M').isoformat()
+    appt.name = post_data['name']
+    appt.prof = post_data['prof']
+    appt.class_code = post_data['class_code']
+    appt.email = post_data['email']
+    appt.w_num = post_data['w_num']
+    appt.creator = post_data['creator']
+    return appt
+
 @csrf_exempt
 def lfp_api_event(request):
     if (request.method != 'POST' and request.method != 'DELETE'):
         return construct_response('Invalid method! Must use POST or DELETE', error=True, status=405)
 
     if (request.method == 'POST'):
+        temp = construct_appt(request.POST)
+
         #r = outlook.sendConfirmationEmail(LfpData.load())
-        # TODO: Validate data here
-        temp = LfpTempAppt()
 
         return construct_response('Created event!')
     else: # Method is DELETE
@@ -75,8 +92,8 @@ def lfp_api_calendar(request):
     lfp_data = LfpData.load()
 
     # TODO: Get this from request somehow
-    startDay = datetime.combine(date.today(), time())
-    endDay = startDay + timedelta(hours=72) 
+    startDay = dateparse.parse_datetime(request.GET['start_day'])
+    endDay = startDay + timedelta(hours=168)
 
     if not authhelper.should_authorize(lfp_data):
         res = authhelper.authorize(request)

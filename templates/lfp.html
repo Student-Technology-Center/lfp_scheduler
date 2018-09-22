@@ -32,7 +32,12 @@
 			"class_code":form.class_code.value,
 			"email":form.email.value,
 			"w_num":form.w_num.value,
-			"creator":"auto"};
+		};
+		{% if user.is_authenticated %}
+		post_data["creator"] = form.creator.value
+		{% else %}
+		post_data["creator"] = "auto"
+		{% endif %}
 		$.ajax({
 			type: "POST",
 			url: '/lfp/api/event',
@@ -52,9 +57,14 @@
 
 	function fetchEvents(start, end, timezone, callback)
 	{
+		start.stripZone()
 		$.ajax({
 			url: '/lfp/api/calendar',
+			type:'get',
 			dataType: 'json',
+			data: {
+				'start_day':start.toISOString()
+			},
 			success: function(data, status)
 			{
 				var events = []
@@ -118,6 +128,9 @@
 		<p><label>W# (Without the W): </label><input name="w_num" type="text" placeholder="12345678" required></p>
 		<p><label>Phone #: </label><input name="client_phone_num" type="text" placeholder="999-999-9999" required></p>
 		<p><label>Date/Time: </label><input name="start_time" id="calendar" type="text" placeholder="Select Date.." required></p>
+		{% if user.is_authenticated %}
+		<p><label>Creator: </label><input name="creator" id="calendar" type="text" placeholder="Employee name" required></p>
+		{% endif %}
 		<input type="submit"></input>
 	</form>
 </body>

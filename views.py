@@ -73,8 +73,6 @@ def gettoken(request):
     authCode = request.GET['code']
     redirectUri = request.build_absolute_uri(reverse('gettoken'))
     token = authhelper.getTokenFromCode(authCode, redirectUri)
-    print('TOKEN::::')
-    print(token)
     if token == None:
         print("ERROR: Failed to get token from auth code!")
         raise Http404("Failed to get auth token!")
