@@ -67,6 +67,8 @@ def construct_appt(post_data):
     appt.class_code = post_data['class_code']
     appt.email = post_data['email']
     appt.w_num = post_data['w_num']
+    appt.phone = post_data['phone']
+    appt.priority = '1'
     appt.creator = post_data['creator']
     return appt
 
@@ -79,6 +81,9 @@ def lfp_api_event(request):
         temp = construct_appt(request.POST)
 
         #r = outlook.sendConfirmationEmail(LfpData.load())
+
+        lfp_data = LfpData.load()
+        outlook.createAppointmentFromModel(lfp_data, temp)
 
         return construct_response('Created event!')
     else: # Method is DELETE

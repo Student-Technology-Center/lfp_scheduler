@@ -33,6 +33,7 @@ class LfpTempAppt(models.Model):
     class_code = models.CharField(max_length=255)
     email = models.EmailField()
     w_num = models.IntegerField()
+    phone = models.CharField(max_length=255)
     priority = models.IntegerField()
     creator = models.CharField(max_length=255)
     completed = models.BooleanField(default=False)

@@ -3,6 +3,8 @@ import uuid
 import json
 from datetime import datetime, date, time, timedelta
 
+from django.utils import dateparse, timezone
+
 from lfp_scheduler.models import LfpTempAppt
 
 #graphEndpoint = 'https://outlook.office.com/api/v2.0{0}'
@@ -144,3 +146,40 @@ def createAppointment(data, startTime, name, prof, classCode, email, wNum, phone
 
     return makeApiCall('POST', url, data.accessToken, data.email, payload=body, expected=[requests.codes.created])
 
+def createAppointmentFromModel(data, appt):
+    url = graphEndpoint.format(stcUser + '/calendars/' + data.calendarId+'/events')
+
+    startTime = dateparse.parse_datetime(appt.start_time)
+    endTime = startTime + timedelta(hours=1)
+
+    body = {
+        'subject':'LFP w/ '+appt.name.split()[0],
+        'body': {
+            'contentType':'HTML',
+            'content':BODY_STR.format(str(startTime.month)+'/'+str(startTime.day),
+                startTime.strftime('%I:%M %p'),
+                appt.name,
+                appt.prof,
+                appt.class_code,
+                appt.email,
+                appt.w_num,
+                appt.phone,
+                appt.priority,
+                appt.creator)},
+        'start': {
+            'DateTime':startTime.isoformat(),
+            #TODO: convert to UTC prior
+            'TimeZone':'Pacific Standard Time', },
+        'end': {
+            'DateTime':endTime.isoformat(),
+            'TimeZone':'Pacific Standard Time', },
+        'attendees': [{
+            'emailAddress': {
+                'address':appt.email,
+                'name':appt.name
+            },
+            'type':'Optional'
+        }]
+    }
+
+    return makeApiCall('POST', url, data.accessToken, data.email, payload=body, expected=[requests.codes.created])

@@ -8,6 +8,9 @@
 	<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.20.1/moment.min.js"></script>
 	<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/fullcalendar/3.8.0/fullcalendar.min.js"></script>
 
+	<link rel="stylesheet" href="https://unpkg.com/flatpickr/dist/flatpickr.min.css">
+	<script src="https://unpkg.com/flatpickr"></script>
+
 	<script type="text/javascript">
 
 	function validate_form(f)
@@ -24,25 +27,28 @@
 			form[tmp_form[i]['name']] = tmp_form[i]['value'];
 		}
 
-		alert(JSON.stringify(form));
+		// alert(JSON.stringify(form));
 
-		post_data = {"start_time":form.start_time.value,
-			"name":form.name.value,
-			"prof":form.prof.value,
-			"class_code":form.class_code.value,
-			"email":form.email.value,
-			"w_num":form.w_num.value,
+		post_data = {"start_time":form.start_time,
+			"name":form.name,
+			"prof":form.prof,
+			"class_code":form.class_code,
+			"email":form.email,
+			"w_num":form.w_num,
+			"phone":form.phone,
 		};
+
 		{% if user.is_authenticated %}
-		post_data["creator"] = form.creator.value
+		post_data["creator"] = form.creator
 		{% else %}
 		post_data["creator"] = "auto"
 		{% endif %}
+
 		$.ajax({
 			type: "POST",
 			url: '/lfp/api/event',
 			dataType: 'json',
-			data: JSON.stringify(post_data),
+			data: post_data,
 			success: function(data, status)
 			{
 				$("#calendar").fullCalendar('refetchEvents');
@@ -126,12 +132,17 @@
 		<p><label>Class Code: </label><input name="class_code" type="text" placeholder="SCHD101" required></p>
 		<p><label>Western Email: </label><input name="email" type="text" placeholder="Client@wwu.edu" required></p>
 		<p><label>W# (Without the W): </label><input name="w_num" type="text" placeholder="12345678" required></p>
-		<p><label>Phone #: </label><input name="client_phone_num" type="text" placeholder="999-999-9999" required></p>
-		<p><label>Date/Time: </label><input name="start_time" id="calendar" type="text" placeholder="Select Date.." required></p>
+		<p><label>Phone #: </label><input name="phone" type="text" placeholder="999-999-9999" required></p>
+		<p><label>Date/Time: </label><input name="start_time" id="datetime" type="text" placeholder="Select Date.." required></p>
 		{% if user.is_authenticated %}
-		<p><label>Creator: </label><input name="creator" id="calendar" type="text" placeholder="Employee name" required></p>
+		<p><label>Creator: </label><input name="creator" type="text" placeholder="Employee name" required></p>
 		{% endif %}
 		<input type="submit"></input>
 	</form>
 </body>
+
+<script>
+	flatpickr("#datetime", {enableTime: true, altInput: true})
+</script>
+
 </html>
