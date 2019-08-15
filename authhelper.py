@@ -29,21 +29,25 @@ scopes = [
     'offline_access',
     'calendars.readwrite.shared',
     'mail.send',
+    'mail.send.shared',
     'user.read',
 ]
 
 def buildSigninUrl(redirectUri):
     # Build the query parameters for the signin url
     params = { 'client_id': client_id,
-             'redirect_uri': redirectUri,
-             'response_type': 'code',
-             'scope': ' '.join(str(i) for i in scopes),
-             'state': '1337', # TODO: encode stuff in here
+            'redirect_uri': redirectUri,
+            'response_type': 'code',
+            'scope': ' '.join(str(i) for i in scopes),
+            'state': '1337', # TODO: encode stuff in here
+            'login_hint': 'stctrain@wwu.edu',
+            'prompt': 'login',
             }
     
     signin_url = authorize_url.format(urlencode(params))
     return signin_url
 
+# Get access token from auth code returned by gettoken redirect
 def getTokenFromCode(code, redirectUri):
     postData = { 'grant_type': 'authorization_code',
         'code': code,
@@ -62,15 +66,34 @@ def getTokenFromCode(code, redirectUri):
     except:
         return None
 
+# Save access token into model
 def saveToken(token):
     data = LfpData.load()
     data.accessToken = token['access_token']
     delta = token['expires_in']
-    # Add extra 5 minute refresh buffer
-    data.accessExpireTime = timezone.now() + timedelta(seconds=delta - 300)
+    # Subtract 5 minute for refresh buffer
+    data.accessExpireTime = datetime.now(timezone.utc) + timedelta(seconds=delta - 300)
     data.refreshToken = token['refresh_token']
     data.save()
 
+def save_calendar_info():
+    data = LfpData.load()
+    me = outlook.getMe(data.accessToken)
+    if me is None:
+        return False
+    data.email = me['mail']
+    data.save()
+    cid = outlook.getLfpCalendar(data)
+    if cid is None:
+        return False
+    data.calendarId = cid['id']
+    data.save()
+    return True
+
+
+# Attempts to refresh access token from refresh token
+# in lfp model - returns None on success,
+# otherwise returns redirect uri for required sign-in
 def attemptRefresh(redirectUri):
     data = LfpData.load()
 
@@ -105,10 +128,17 @@ def attemptRefresh(redirectUri):
 
 # TODO: maybe move this to outlook?
 def testApiCall(accessToken):
-    if outlook.getMe(accessToken) == None:
-        return False
-    else:
-        return True
+    return outlook.getMe(accessToken) != None
+
+def time_remaining(data):
+    return (data.accessToken is not None and
+            data.accessExpireTime is not None and
+            datetime.now(timezone.utc) < data.accessExpireTime)
+
+def should_authorize(data):
+    return (time_remaining(data) and
+            data.email is not None and
+            data.calendarId is not None)
 
 # If function succeeds, return None, else return redirect uri
 def authorize(request):
@@ -117,13 +147,19 @@ def authorize(request):
     data = LfpData.load()
     redirectUri = request.build_absolute_uri(reverse('gettoken'))
 
-    if data.accessToken != None and data.accessExpireTime != None and datetime.now(timezone.utc) < data.accessExpireTime:
-        if testApiCall(data.accessToken):
-            print("Test api call succeeded, auth successful!")
+    # Check if access token exists and is up-to-date
+    if time_remaining(data):
+        # Attempt to repopulate calendar and email
+        if save_calendar_info():
             return None
         else:
             print("unexpired token existed, but API call failed, attempting refresh...")
-            return attemptRefresh(redirectUri)
     else:
         print("Access token didn't exist or was expired, attempting refresh...")
-        return attemptRefresh(redirectUri)
+
+    res = attemptRefresh(redirectUri)
+    if res is None:
+        if not save_calendar_info():
+            print("Something is really bad!!! Auth succeeded, but getting calendar ID failed")
+    return res
+

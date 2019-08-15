@@ -3,6 +3,10 @@ import uuid
 import json
 from datetime import datetime, date, time, timedelta
 
+from django.utils import dateparse, timezone
+
+from lfp_scheduler.models import LfpTempAppt
+
 #graphEndpoint = 'https://outlook.office.com/api/v2.0{0}'
 graphEndpoint = 'https://graph.microsoft.com/v1.0{0}'
 stcUser = '/users/StudentTechnology.Center@wwu.edu'
@@ -39,7 +43,10 @@ def makeApiCall(method, url, token, userEmail, payload=None, params=None, header
         response = requests.post(url, headers=hdrs, data=json.dumps(payload), params=params)
     
     if (response.status_code in expected):
-        return response.json()
+        try:
+            return response.json()
+        except ValueError:
+            return {}
     else:
         print("api call failed with code: " + str(response.status_code))
         print("dump:\n"+response.text+"\nend dump\n")
@@ -56,18 +63,40 @@ def getCalendars(data):
     url = graphEndpoint.format(stcUser + '/calendars')
     return makeApiCall('GET', url, data.accessToken, data.email)
 
-def getCalendarView(data):
-    url = graphEndpoint.format(stcUser + '/'+data.calendarId+'/calendarview')
+def getLfpCalendar(data):
+    url = graphEndpoint.format(stcUser + '/calendars');
+    cals = makeApiCall('GET', url, data.accessToken, data.email)
+    for item in cals['value']:
+        if item['name'] == 'Test Calendar':
+            return item
+    return None
 
-    dayStart = datetime.combine(date.today(), time())
+def sendConfirmationEmail(data):
+    email = {'message': {
+        'subject': 'This is a test',
+        'body': {
+            'contentType': 'Text',
+            'content': 'This is a test of sending an email programmatically'
+        },
+        'toRecipients': [{
+            'emailAddress': {'address': 'nataraj@wwu.edu'}
+        }]
+    }}
 
-    dayEnd = dayStart + timedelta(hours=24)
+    url = graphEndpoint.format(stcUser + '/sendMail')
 
-    params = {'startDateTime':dayStart.isoformat(),
-        'endDateTime':dayEnd.isoformat()}
+    return makeApiCall('POST', url, data.accessToken, data.email, payload=email, expected=[requests.codes.accepted])
+
+# Gets the calendar view for the specified day range
+# Params are time isostrings corresponding to the day ranges
+def getCalendarView(data, startDay, endDay):
+    url = graphEndpoint.format(stcUser + '/calendars/'+data.calendarId+'/calendarview')
+
+    params = {'startDateTime': startDay,
+        'endDateTime': endDay}
+    print("date range: {} {}".format(startDay, endDay))
 
     return makeApiCall('GET', url, data.accessToken, data.email, params=params, headers={'Prefer':'outlook.timezone="America/Los_Angeles"'})
-    #res = makeApiCall('GET', url, token, email, params=params)
 
 BODY_STR = ("<br>This confirms your appointment on {0} at {1} at the "+
 "Student Technology Center. If you are unable to keep this appointment, "+
@@ -117,3 +146,40 @@ def createAppointment(data, startTime, name, prof, classCode, email, wNum, phone
 
     return makeApiCall('POST', url, data.accessToken, data.email, payload=body, expected=[requests.codes.created])
 
+def createAppointmentFromModel(data, appt):
+    url = graphEndpoint.format(stcUser + '/calendars/' + data.calendarId+'/events')
+
+    startTime = dateparse.parse_datetime(appt.start_time)
+    endTime = startTime + timedelta(hours=1)
+
+    body = {
+        'subject':'LFP w/ '+appt.name.split()[0],
+        'body': {
+            'contentType':'HTML',
+            'content':BODY_STR.format(str(startTime.month)+'/'+str(startTime.day),
+                startTime.strftime('%I:%M %p'),
+                appt.name,
+                appt.prof,
+                appt.class_code,
+                appt.email,
+                appt.w_num,
+                appt.phone,
+                appt.priority,
+                appt.creator)},
+        'start': {
+            'DateTime':startTime.isoformat(),
+            #TODO: convert to UTC prior
+            'TimeZone':'Pacific Standard Time', },
+        'end': {
+            'DateTime':endTime.isoformat(),
+            'TimeZone':'Pacific Standard Time', },
+        'attendees': [{
+            'emailAddress': {
+                'address':appt.email,
+                'name':appt.name
+            },
+            'type':'Optional'
+        }]
+    }
+
+    return makeApiCall('POST', url, data.accessToken, data.email, payload=body, expected=[requests.codes.created])

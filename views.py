@@ -12,12 +12,8 @@ import time
 from datetime import datetime, timedelta
 import json
 
-@login_required
+#@login_required
 def lfp(request):
-    print("uris:")
-    print(request.build_absolute_uri(reverse('lfp')))
-    print(request.build_absolute_uri(reverse('gettoken')))
-
     authResult = authhelper.authorize(request)
     if authResult != None:
         print("auth not complete, redirecting to {0}".format(authResult))
@@ -45,30 +41,33 @@ def lfp(request):
 
     #TODO: This should DEFINITELY not be done every reload... do only after full auth refresh?
     #TODO: Check for return before dereferencing None
-    outlookMe = outlook.getMe(lfpdata.accessToken)
-    if outlookMe == None:
-        print("API call failed!")
-    else:
-        print(outlookMe)
-        if lfpdata.email == None or outlookMe['mail'] != lfpdata.email:
-            print("Emails don't match! Replacing...")
-            lfpdata.email = outlookMe['mail']
-            lfpdata.save()
+    #outlookMe = outlook.getMe(lfpdata.accessToken)
+    #if outlookMe == None:
+    #    print("API call failed!")
+    #else:
+    #    print(outlookMe)
+    #    if lfpdata.email == None or outlookMe['mail'] != lfpdata.email:
+    #        print("Emails don't match! Replacing...")
+    #        lfpdata.email = outlookMe['mail']
+    #        lfpdata.save()
 
-    calendars = outlook.getCalendars(lfpdata)
+    #calendars = outlook.getCalendars(lfpdata)
 
     # Find the proper calendar ID
     # TODO: Cache this for performance
-    for item in calendars['value']:
-        print(item)
-        if (item['name'] == 'Large Format Printer'):
-            print('id: ' + item['id'])
-            lfpdata.calendarId = item['id']
-            lfpdata.save()
+    #for item in calendars['value']:
+    #    print(item)
+    #    if (item['name'] == 'Large Format Printer'):
+    #        print('id: ' + item['id'])
+    #        lfpdata.calendarId = item['id']
+    #        lfpdata.save()
     
     return render(request, 'form.html')
 
-@login_required
+def lfp_public(request):
+    return render(request, "lfp.html");
+
+#@login_required
 def gettoken(request):
     # TODO: Check request.GET['state']
     authCode = request.GET['code']
@@ -79,5 +78,7 @@ def gettoken(request):
         raise Http404("Failed to get auth token!")
     else:
         authhelper.saveToken(token)
+        authhelper.save_calendar_info()
 
-    return HttpResponseRedirect(request.build_absolute_uri(reverse('lfp')))
+    return HttpResponseRedirect(request.build_absolute_uri(reverse('lfp_public')))
+

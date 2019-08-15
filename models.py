@@ -1,3 +1,4 @@
+import uuid
 from django.db import models
 from django.db.models.signals import post_save
 from django.dispatch import receiver
@@ -20,3 +21,19 @@ class LfpData(models.Model):
             return cls.objects.get()
         except cls.DoesNotExist:
             return cls()
+
+class LfpTempAppt(models.Model):
+    appt_id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    
+    expire_time = models.DateTimeField(null=True)
+
+    start_time = models.CharField(max_length=255) # MUST be isoformat
+    name = models.CharField(max_length=255)
+    prof = models.CharField(max_length=255)
+    class_code = models.CharField(max_length=255)
+    email = models.EmailField()
+    w_num = models.IntegerField()
+    phone = models.CharField(max_length=255)
+    priority = models.IntegerField()
+    creator = models.CharField(max_length=255)
+    completed = models.BooleanField(default=False)

@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<Title>This is a test</Title>
+	<link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/fullcalendar/3.8.0/fullcalendar.min.css" />
+
+	<script type="text/javascript" src="https://code.jquery.com/jquery-latest.min.js"></script>
+	<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.20.1/moment.min.js"></script>
+	<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/fullcalendar/3.8.0/fullcalendar.min.js"></script>
+
+	<link rel="stylesheet" href="https://unpkg.com/flatpickr/dist/flatpickr.min.css">
+	<script src="https://unpkg.com/flatpickr"></script>
+
+	<script type="text/javascript">
+
+	function validate_form(f)
+	{
+	}
+
+	function form_submit(e)
+	{
+		e.preventDefault();
+		tmp_form = $("#appt_create").serializeArray();
+		form = {};
+		for (var i = 0; i < tmp_form.length; i++)
+		{
+			form[tmp_form[i]['name']] = tmp_form[i]['value'];
+		}
+
+		// alert(JSON.stringify(form));
+
+		post_data = {"start_time":form.start_time,
+			"name":form.name,
+			"prof":form.prof,
+			"class_code":form.class_code,
+			"email":form.email,
+			"w_num":form.w_num,
+			"phone":form.phone,
+		};
+
+		{% if user.is_authenticated %}
+		post_data["creator"] = form.creator
+		{% else %}
+		post_data["creator"] = "auto"
+		{% endif %}
+
+		$.ajax({
+			type: "POST",
+			url: '/lfp/api/event',
+			dataType: 'json',
+			data: post_data,
+			success: function(data, status)
+			{
+				$("#calendar").fullCalendar('refetchEvents');
+				$("#submit_status").text("Success!");
+			},
+			error: function(xhr, textStatus, error)
+			{
+				$("#submit_status").text("Error!");
+			}
+		});
+	}
+
+	function fetchEvents(start, end, timezone, callback)
+	{
+		start.stripZone()
+		$.ajax({
+			url: '/lfp/api/calendar',
+			type:'get',
+			dataType: 'json',
+			data: {
+				'start_day':start.toISOString()
+			},
+			success: function(data, status)
+			{
+				var events = []
+				for (var i = 0; i < data.data.length; i++)
+				{
+					events.push({
+						title:"lfp ",
+						start:data.data[i].start_time
+					});
+				}
+				callback(events);
+			}
+		});
+	}
+
+	$(function()
+	{
+		$("#calendar").fullCalendar(
+		{
+			defaultView: 'agendaWeek',
+			defaultTimedEventDuration: '01:00:00',
+			allDayDefault: false,
+			minTime: '6:00',
+			timezone: 'UTC',
+			businessHours:[
+				{
+					dow: [0],
+					start: '14:00',
+					end: '21:00'
+				},
+				{
+					dow: [1, 2, 3, 4],
+					start: '08:00',
+					end: '21:00'
+				},
+				{
+					dow: [5],
+					start: '08:00',
+					end: '17:00'
+				},
+				{
+					dow: [6],
+					start: '11:00',
+					end: '18:00'
+				}
+			],
+			events: fetchEvents
+		});
+		$("#appt_create").submit(form_submit);
+	});
+	</script>
+</head>
+<body>
+	<div id="calendar"></div>
+	<div id="submit_status"></div>
+	<form id="appt_create" action="">
+		<p><label>Name: </label><input name="name" type="text" placeholder="First Last" required></p>
+		<p><label>Professor Name: </label><input name="prof" type="text" placeholder="First Last" required></p>
+		<p><label>Class Code: </label><input name="class_code" type="text" placeholder="SCHD101" required></p>
+		<p><label>Western Email: </label><input name="email" type="text" placeholder="Client@wwu.edu" required></p>
+		<p><label>W# (Without the W): </label><input name="w_num" type="text" placeholder="12345678" required></p>
+		<p><label>Phone #: </label><input name="phone" type="text" placeholder="999-999-9999" required></p>
+		<p><label>Date/Time: </label><input name="start_time" id="datetime" type="text" placeholder="Select Date.." required></p>
+		{% if user.is_authenticated %}
+		<p><label>Creator: </label><input name="creator" type="text" placeholder="Employee name" required></p>
+		{% endif %}
+		<input type="submit"></input>
+	</form>
+</body>
+
+<script>
+	flatpickr("#datetime", {enableTime: true, altInput: true})
+</script>
+
+</html>
