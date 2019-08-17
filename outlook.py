@@ -67,7 +67,7 @@ def getLfpCalendar(data):
     url = graphEndpoint.format(stcUser + '/calendars');
     cals = makeApiCall('GET', url, data.accessToken, data.email)
     for item in cals['value']:
-        if item['name'] == 'Test Calendar':
+        if item['name'] == 'Large Format Printer':
             return item
     return None
 
