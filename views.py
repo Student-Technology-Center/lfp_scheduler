@@ -19,6 +19,8 @@ def lfp(request):
         print("auth not complete, redirecting to {0}".format(authResult))
         return HttpResponseRedirect(authResult)
 
+    authhelper.save_calendar_info()
+
     lfpdata = LfpData.load()
 
     if (request.method == 'POST'):
